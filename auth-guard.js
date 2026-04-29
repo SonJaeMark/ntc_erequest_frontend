@@ -37,5 +37,3 @@ const requireRole = (allowedRoles) => {
     return false;
   }
 
-  return true;
-};
