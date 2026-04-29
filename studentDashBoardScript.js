@@ -19,6 +19,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loadDocumentTypes = async () => {
     try {
       const token = getAuthToken();
+      
+      console.log("=== LOAD DOCUMENTS DEBUG ===");
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      if (token) {
+        console.log("Token value (FULL):", token);
+      }
+      console.log("SessionStorage entries:", sessionStorage.length);
+      console.log("=== END DEBUG ===\n");
+      
       if (!token) {
         console.error("No auth token found");
         alert("Session expired. Please log in again.");
@@ -67,6 +77,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           option.textContent = type.replace(/_/g, " ");
           documentTypeSelect.appendChild(option);
         });
+        
+        console.log("Successfully loaded", uniqueTypes.length, "document types");
       }
     } catch (error) {
       console.error("Error loading document types:", error);
@@ -105,6 +117,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     try {
       const token = getAuthToken();
+      
+      // Debug: Check token status
+      console.log("=== FORM SUBMISSION DEBUG ===");
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      if (token) {
+        console.log("Token value (FULL):", token);
+        console.log("Token includes 'Bearer'?", token.includes("Bearer"));
+      }
+      console.log("SessionStorage contents:");
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        const value = sessionStorage.getItem(key);
+        console.log(`  ${key}:`, value?.substring ? value.substring(0, 40) + "..." : value);
+      }
+      console.log("=== END DEBUG ===\n");
+
       if (!token) {
         throw new Error("No auth token found. Please log in again.");
       }
@@ -121,14 +150,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         registrarId: 0
       };
 
-      console.log("Submitting document request:", requestBody);
+      console.log("Request payload:", requestBody);
+
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+      
+      console.log("Request headers:");
+      console.log("  Content-Type:", headers["Content-Type"]);
+      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
 
       const response = await fetch(`${BASE_URL}/api/document-request/submit`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
+        headers: headers,
         body: JSON.stringify(requestBody),
       });
 
