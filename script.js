@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.setItem("userId", data.userId);
     sessionStorage.setItem("email", data.email);
     sessionStorage.setItem("role", data.role);
+    sessionStorage.setItem(AUTH_ROLE_KEY, data.role); // Also store with the key that auth-guard uses
   };
 
   const redirectByRole = (role) => {
@@ -69,16 +70,25 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Login success:", text);
 
       const data = text ? JSON.parse(text) : null;
+      console.log("Login response data:", data);
+      console.log("Access token from response:", data?.accessToken?.substring(0, 20) + "...");
+      
       const role = getRoleFromResponse(data);
       console.log("Detected role:", role, "Full response:", data);
 
       storeAuthData(data);
+      
+      // Verify storage
+      console.log("After storeAuthData, sessionStorage ntc_access_token:", sessionStorage.getItem(AUTH_TOKEN_KEY)?.substring(0, 20) + "...");
+      console.log("After storeAuthData, sessionStorage userId:", sessionStorage.getItem("userId"));
+      console.log("After storeAuthData, sessionStorage role:", sessionStorage.getItem("role"));
 
       redirectByRole(role);
 
       return data;
     } catch (error) {
       console.error("Login error:", error);
+      alert("Login failed: " + error.message);
     }
   });
 });
