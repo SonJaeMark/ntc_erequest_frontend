@@ -2,6 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const AUTH_TOKEN_KEY = "ntc_access_token";
   const AUTH_REFRESH_KEY = "ntc_refresh_token";
   const AUTH_ROLE_KEY = "ntc_user_role";
+  const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
   const form = document.getElementById("login-form");
 
   const getRoleFromResponse = (data) => {
@@ -23,6 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionStorage.setItem("userId", data.userId);
     sessionStorage.setItem("email", data.email);
     sessionStorage.setItem("role", data.role);
+    sessionStorage.setItem(AUTH_ROLE_KEY, data.role);
   };
 
   const redirectByRole = (role) => {
@@ -48,17 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       console.log("Submitting login request for:", email);
 
-      const response = await fetch(
-        "https://ntc-erquest-system-1.onrender.com/auth/login",
-        {
-          method: "POST",
-          credentials: "include", // important for cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch(`${BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       const text = await response.text();
 
@@ -66,19 +64,16 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(`Login failed: ${response.status} - ${text}`);
       }
 
-      console.log("Login success:", text);
-
       const data = text ? JSON.parse(text) : null;
       const role = getRoleFromResponse(data);
-      console.log("Detected role:", role, "Full response:", data);
 
       storeAuthData(data);
-
       redirectByRole(role);
 
       return data;
     } catch (error) {
       console.error("Login error:", error);
+      alert("Login failed: " + error.message);
     }
   });
 });
