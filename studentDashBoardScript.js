@@ -38,7 +38,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const response = await fetch(`${BASE_URL}/api/document/student`, {
         method: "GET",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
         headers: {
+          "Accept": "application/json",
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
@@ -153,19 +157,27 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log("Request payload:", requestBody);
 
       const headers = {
+        "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       };
       
-      console.log("Request headers:");
-      console.log("  Content-Type:", headers["Content-Type"]);
-      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
-
-      const response = await fetch(`${BASE_URL}/api/document-request/submit`, {
+      const fetchOptions = {
         method: "POST",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
         headers: headers,
         body: JSON.stringify(requestBody),
-      });
+      };
+      
+      console.log("Request headers:");
+      console.log("  Accept:", headers.Accept);
+      console.log("  Content-Type:", headers["Content-Type"]);
+      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
+      console.log("Fetch options:", fetchOptions);
+
+      const response = await fetch(`${BASE_URL}/api/document-request/submit`, fetchOptions);
 
       const text = await response.text();
 
