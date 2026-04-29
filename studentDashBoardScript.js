@@ -2,6 +2,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const AUTH_TOKEN_KEY = "ntc_access_token";
   const form = document.getElementById("document-request-form");
 
+  if (!form) {
+    console.error("Form element with id 'document-request-form' not found in the DOM");
+    alert("Error: Form not found. Please refresh the page.");
+    return;
+  }
+
   const getAuthToken = () => {
     const token = sessionStorage.getItem(AUTH_TOKEN_KEY);
     console.log("getAuthToken() called - returning:", token ? token.substring(0, 20) + "..." : "null");
