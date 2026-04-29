@@ -1,4 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
+  const AUTH_TOKEN_KEY = "ntc_access_token";
+  const AUTH_REFRESH_KEY = "ntc_refresh_token";
   const AUTH_ROLE_KEY = "ntc_user_role";
   const form = document.getElementById("login-form");
 
@@ -9,8 +11,18 @@ document.addEventListener("DOMContentLoaded", () => {
       data?.data?.role ??
       data?.accountType ??
       "";
-
     return String(rawRole).trim().toUpperCase();
+  };
+
+  const storeAuthData = (data) => {
+    // Access token (short-lived)
+    sessionStorage.setItem(AUTH_TOKEN_KEY, data.accessToken);
+    // Refresh token (less ideal)
+    localStorage.setItem(AUTH_REFRESH_KEY, data.refreshToken);
+    // User info
+    sessionStorage.setItem("userId", data.userId);
+    sessionStorage.setItem("email", data.email);
+    sessionStorage.setItem("role", data.role);
   };
 
   const redirectByRole = (role) => {
@@ -60,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const role = getRoleFromResponse(data);
       console.log("Detected role:", role, "Full response:", data);
 
-      sessionStorage.setItem(AUTH_ROLE_KEY, role);
+      storeAuthData(data);
 
       redirectByRole(role);
 
