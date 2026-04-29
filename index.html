@@ -5,55 +5,261 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTC eRequest | Log-in</title>
 
+    <!-- ============================================================ -->
+    <!-- FONTS -->
+    <!-- ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
+    <!-- ============================================================ -->
+    <!-- DEPENDENCIES -->
+    <!-- ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
 
+    <!-- ============================================================ -->
+    <!-- TAILWIND CONFIG -->
+    <!-- ============================================================ -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        // This replaces the default Tailwind 'sans' font with Lato
                         sans: ['Lato', 'ui-sans-serif', 'system-ui'],
                     }
                 }
             }
         }
     </script>
+
+    <!-- ============================================================ -->
+    <!-- LOADING SPINNER STYLE -->
+    <!-- ============================================================ -->
+    <style>
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            display: inline-block;
+        }
+    </style>
+
 </head>
 <body class="bg-slate-50 min-h-screen flex items-center justify-center p-4">
-    
+
+    <!-- ============================================================ -->
+    <!-- LOGIN CARD -->
+    <!-- ============================================================ -->
     <div class="w-full max-w-sm">
         <form id="login-form" class="bg-white p-8 rounded-2xl shadow-xl border-t-4 border-blue-600">
+
+            <!-- Header -->
             <header class="text-center mb-8">
                 <h2 class="text-3xl font-black text-blue-900 tracking-tight">Welcome Back</h2>
                 <p class="text-gray-500 text-sm mt-1">Please enter your details</p>
             </header>
 
+            <!-- Email -->
             <div class="mb-5">
                 <label for="email" class="block text-sm font-bold text-gray-700 mb-1">Email</label>
-                <input type="email" id="email" name="email" required 
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
                     placeholder="name@company.com"
                     class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
             </div>
 
+            <!-- Password -->
             <div class="mb-6">
                 <label for="password" class="block text-sm font-bold text-gray-700 mb-1">Password</label>
-                <input type="password" id="password" name="password" required 
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
                     placeholder="••••••••"
                     class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
             </div>
 
-            <button type="submit" 
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
-                Sign In
+            <!-- Error Message -->
+            <div id="login-error" class="hidden mb-4 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 text-center">
+                Invalid email or password. Please try again.
+            </div>
+
+            <!-- Submit -->
+            <button
+                type="submit"
+                id="submit-btn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span id="btn-text">Sign In</span>
             </button>
+
         </form>
     </div>
 
-    <script src="script.js"></script>
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
+    <script src="loginScript.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // ============================================================
+            // REDIRECT GUARD: Skip login if already authenticated
+            // ============================================================
+            const existingToken = sessionStorage.getItem("ntc_access_token");
+            const existingRole = sessionStorage.getItem("role");
+
+            if (existingToken && existingRole) {
+                const role = String(existingRole).trim().toUpperCase();
+                if (role === "STUDENT") {
+                    window.location.replace("student-dashboard.html");
+                    return;
+                }
+                if (role === "ADMIN" || role === "REGISTRAR") {
+                    window.location.replace("registrar-dashboard.html");
+                    return;
+                }
+                // Unknown role — clear storage and stay on login page
+                sessionStorage.clear();
+                localStorage.clear();
+            }
+
+            // ============================================================
+            // ELEMENT REFERENCES
+            // ============================================================
+            const form = document.getElementById("login-form");
+            const submitBtn = document.getElementById("submit-btn");
+            const btnText = document.getElementById("btn-text");
+            const errorEl = document.getElementById("login-error");
+
+            // ============================================================
+            // HELPERS: Loading state
+            // ============================================================
+
+            /**
+             * Switch button to loading state — spinner + text, disabled
+             */
+            const setLoading = () => {
+                submitBtn.disabled = true;
+                btnText.textContent = "Signing in...";
+                const spinner = document.createElement("span");
+                spinner.className = "spinner";
+                spinner.id = "btn-spinner";
+                submitBtn.prepend(spinner);
+            };
+
+            /**
+             * Reset button back to default state
+             */
+            const resetLoading = () => {
+                submitBtn.disabled = false;
+                btnText.textContent = "Sign In";
+                const spinner = document.getElementById("btn-spinner");
+                if (spinner) spinner.remove();
+            };
+
+            /**
+             * Show the error message block
+             */
+            const showError = (message) => {
+                errorEl.textContent = message || "Invalid email or password. Please try again.";
+                errorEl.classList.remove("hidden");
+            };
+
+            /**
+             * Hide the error message block
+             */
+            const hideError = () => {
+                errorEl.classList.add("hidden");
+            };
+
+            // ============================================================
+            // FORM SUBMISSION
+            // ============================================================
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+
+                // --- Reset UI state ---
+                hideError();
+                setLoading();
+
+                // --- Get form values ---
+                const email = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value;
+
+                try {
+                    console.log("Submitting login request for:", email);
+
+                    // --- Send login request ---
+                    const response = await fetch(
+                        "https://ntc-erquest-system-1.onrender.com/auth/login",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({ email, password }),
+                        }
+                    );
+
+                    const text = await response.text();
+
+                    if (!response.ok) {
+                        throw new Error(`Login failed: ${response.status} - ${text}`);
+                    }
+
+                    // --- Parse response ---
+                    const data = text ? JSON.parse(text) : null;
+
+                    if (!data || !data.accessToken) {
+                        throw new Error("Invalid response from server. Please try again.");
+                    }
+
+                    // --- Store auth data ---
+                    sessionStorage.setItem("ntc_access_token", data.accessToken);
+                    localStorage.setItem("ntc_refresh_token", data.refreshToken);
+                    sessionStorage.setItem("userId", data.userId);
+                    sessionStorage.setItem("email", data.email);
+                    sessionStorage.setItem("role", data.role);
+                    sessionStorage.setItem("ntc_user_role", data.role);
+
+                    console.log("Login success. Role:", data.role);
+
+                    // --- Redirect by role using replace() to prevent back-button loop ---
+                    const role = String(data.role).trim().toUpperCase();
+
+                    if (role === "STUDENT") {
+                        window.location.replace("student-dashboard.html");
+                        return;
+                    }
+                    if (role === "ADMIN" || role === "REGISTRAR") {
+                        window.location.replace("registrar-dashboard.html");
+                        return;
+                    }
+
+                    // Unknown role — clear and show error
+                    sessionStorage.clear();
+                    localStorage.clear();
+                    throw new Error(`Unknown role: ${role || "empty"}`);
+
+                } catch (error) {
+                    console.error("Login error:", error.message);
+                    showError("Invalid email or password. Please try again.");
+                    resetLoading();
+                }
+            });
+
+        });
+    </script>
+
 </body>
 </html>

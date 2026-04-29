@@ -1,4 +1,9 @@
 document.addEventListener("DOMContentLoaded", async () => {
+
+  // ============================================================
+  // CONSTANTS & CONFIGURATION
+  // ============================================================
+
   const AUTH_TOKEN_KEY = "ntc_access_token";
   const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
   const form = document.getElementById("document-request-form");
@@ -9,9 +14,27 @@ document.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+  // ============================================================
+  // HELPERS
+  // ============================================================
+
   const getAuthToken = () => sessionStorage.getItem(AUTH_TOKEN_KEY);
 
-  let documentMap = {}; // Store mapping of documentType -> document info
+  let documentMap = {}; // Stores mapping of documentType -> document info
+
+  /**
+   * Format raw enum string to Title Case
+   * e.g. CERTIFICATE_OF_ENROLLMENT -> Certificate Of Enrollment
+   */
+  const formatLabel = (type) =>
+    type
+      .replace(/_/g, " ")
+      .toLowerCase()
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // ============================================================
+  // LOAD DOCUMENT TYPES
+  // ============================================================
 
   /**
    * Fetch and populate available document types for the student
@@ -19,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loadDocumentTypes = async () => {
     try {
       const token = getAuthToken();
-      
+
       console.log("=== LOAD DOCUMENTS DEBUG ===");
       console.log("Token exists:", !!token);
       console.log("Token length:", token?.length || 0);
@@ -28,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       console.log("SessionStorage entries:", sessionStorage.length);
       console.log("=== END DEBUG ===\n");
-      
+
       if (!token) {
         console.error("No auth token found");
         alert("Session expired. Please log in again.");
@@ -59,13 +82,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const documentTypeSelect = document.getElementById("documentType");
 
       if (documentTypeSelect && Array.isArray(documents) && documents.length > 0) {
+
         // Build map of documentType -> document info
         documentMap = {};
         documents.forEach(doc => {
           if (!documentMap[doc.documentType]) {
             documentMap[doc.documentType] = {
               id: doc.id,
-              studentFullName: doc.studentFullName
+              studentFullName: doc.studentFullName,
             };
           }
         });
@@ -73,17 +97,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Get unique document types
         const uniqueTypes = Object.keys(documentMap);
 
-        // Populate the select
+        // Populate the select dropdown
         documentTypeSelect.innerHTML = '<option value="" disabled selected>Select document type</option>';
         uniqueTypes.forEach(type => {
           const option = document.createElement("option");
           option.value = type;
-          option.textContent = type.replace(/_/g, " ");
+          // Bug 4 fix: format enum to proper Title Case
+          option.textContent = formatLabel(type);
           documentTypeSelect.appendChild(option);
         });
-        
+
         console.log("Successfully loaded", uniqueTypes.length, "document types");
       }
+
     } catch (error) {
       console.error("Error loading document types:", error);
       alert("Error loading documents. Please try again.");
@@ -93,25 +119,160 @@ document.addEventListener("DOMContentLoaded", async () => {
   // Load documents on page load
   await loadDocumentTypes();
 
+  // ============================================================
+  // LOAD DOCUMENT REQUESTS
+  // ============================================================
+
   /**
-   * Handle form submission to create document request
+   * Fetch and display student's document requests
+   */
+  const loadDocumentRequests = async () => {
+    try {
+      const token = getAuthToken();
+
+      if (!token) {
+        console.error("No auth token found");
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/api/document-request/student`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to fetch requests:", response.status, errorText);
+        return;
+      }
+
+      const requests = await response.json();
+      const container = document.getElementById("document-requests-container");
+
+      if (container && Array.isArray(requests)) {
+        container.innerHTML = ""; // Clear existing content
+
+        if (requests.length === 0) {
+          container.innerHTML = "<p class='text-gray-600'>No document requests found.</p>";
+          return;
+        }
+
+        requests.forEach(async (request) => {
+          const requestDiv = document.createElement("div");
+          requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4";
+
+          requestDiv.innerHTML = `
+            <h1 class="text-xl font-bold text-gray-700 mb-2">${formatLabel(request.documentType)}</h1>
+            <div>
+              <h5 class="text-lg font-bold text-gray-600">Status: ${request.status}</h5>
+              <p>${new Date(request.requestedAt).toLocaleDateString()}</p>
+            </div>
+            <div id="logs-${request.id}" class="mt-4">
+              <p class="text-sm text-gray-500">Loading logs...</p>
+            </div>
+          `;
+
+          container.appendChild(requestDiv);
+
+          // Load logs for this request
+          await loadRequestLogs(request.id);
+        });
+      }
+
+    } catch (error) {
+      console.error("Error loading document requests:", error);
+    }
+  };
+
+  /**
+   * Fetch and display logs for a specific document request
+   */
+  const loadRequestLogs = async (documentRequestId) => {
+    try {
+      const token = getAuthToken();
+
+      if (!token) {
+        console.error("No auth token found");
+        return;
+      }
+
+      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to fetch logs:", response.status, errorText);
+        return;
+      }
+
+      const logs = await response.json();
+      const logsContainer = document.getElementById(`logs-${documentRequestId}`);
+
+      if (logsContainer && Array.isArray(logs)) {
+        if (logs.length === 0) {
+          logsContainer.innerHTML = "<p class='text-sm text-gray-500'>No logs available.</p>";
+          return;
+        }
+
+        logsContainer.innerHTML = "<h6 class='text-md font-semibold text-gray-700 mb-2'>Request Logs:</h6>";
+
+        logs.forEach((log) => {
+          const logDiv = document.createElement("div");
+          logDiv.className = "text-sm text-gray-600 mb-1";
+          logDiv.innerHTML = `
+            <span class="font-medium">${log.requestStatus}</span> - ${new Date(log.dateAction).toLocaleString()} ${log.remarks ? `- ${log.remarks}` : ''}
+          `;
+          logsContainer.appendChild(logDiv);
+        });
+      }
+
+    } catch (error) {
+      console.error("Error loading request logs:", error);
+    }
+  };
+
+  // Load document requests on page load
+  await loadDocumentRequests();
+
+  // ============================================================
+  // FORM SUBMISSION
+  // ============================================================
+
+  /**
+   * Handle form submission to create a document request
    */
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    // Get form values
+    // --- Get form values ---
     const purpose = document.getElementById("purpose").value;
     const documentType = document.getElementById("documentType").value;
     const additionalDetails = document.getElementById("additionalDetails").value.trim();
 
-    // Validate document type selection
-    const documentId = documentMap[documentType]?.id;
-    if (!documentId) {
-      alert("Please select a valid document type");
+    // --- Bug 3 fix: validate purpose before submission ---
+    if (!purpose) {
+      alert("Please select a purpose.");
       return;
     }
 
-    // Get user info from session storage
+    // --- Validate document type selection ---
+    const documentId = documentMap[documentType]?.id;
+    if (!documentId) {
+      alert("Please select a valid document type.");
+      return;
+    }
+
+    // --- Get user info from session storage ---
     const studentId = sessionStorage.getItem("userId");
     if (!studentId) {
       alert("Session error. Please log in again.");
@@ -119,10 +280,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // --- Bug 2 fix: disable submit button during fetch ---
+    const submitBtn = document.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+
     try {
       const token = getAuthToken();
-      
-      // Debug: Check token status
+
+      // --- Debug: Check token status ---
       console.log("=== FORM SUBMISSION DEBUG ===");
       console.log("Token exists:", !!token);
       console.log("Token length:", token?.length || 0);
@@ -142,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         throw new Error("No auth token found. Please log in again.");
       }
 
-      // Build request payload according to spec
+      // --- Build request payload ---
       const requestBody = {
         purpose,
         documentType,
@@ -151,17 +317,19 @@ document.addEventListener("DOMContentLoaded", async () => {
         remarks: "",
         status: "PENDING",
         studentId: Number(studentId),
-        registrarId: 0
+        registrarId: 0,
       };
 
       console.log("Request payload:", requestBody);
 
+      // --- Build headers ---
       const headers = {
         "Accept": "application/json",
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       };
-      
+
+      // --- Build fetch options ---
       const fetchOptions = {
         method: "POST",
         mode: "cors",
@@ -170,34 +338,47 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers: headers,
         body: JSON.stringify(requestBody),
       };
-      
+
       console.log("Request headers:");
       console.log("  Accept:", headers.Accept);
       console.log("  Content-Type:", headers["Content-Type"]);
       console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
       console.log("Fetch options:", fetchOptions);
 
+      // --- Send request ---
       const response = await fetch(`${BASE_URL}/api/document-request/submit`, fetchOptions);
-
       const text = await response.text();
 
       if (!response.ok) {
         throw new Error(`Request failed: ${response.status} - ${text}`);
       }
 
+      // --- Handle response ---
       const data = text ? JSON.parse(text) : null;
       const requestId = data?.requestId ?? data?.id ?? data?.data?.requestId ?? null;
 
       if (requestId) {
         console.log("Request submitted successfully. Request ID:", requestId);
         alert("Document request submitted successfully!");
-        window.location.href = "student-dashboard.html";
+
+        // Reset form and refresh requests list
+        form.reset();
+        await loadDocumentRequests();
+
+        // Bug 1 fix: dispatch custom event for SPA navigation instead of full page reload
+        window.dispatchEvent(new CustomEvent("navigateTo", { detail: { section: "dashboard" } }));
       } else {
         throw new Error("No request ID returned by API");
       }
+
     } catch (error) {
       console.error("Error submitting request:", error.message);
       alert("Failed to submit request: " + error.message);
+
+      // Bug 2 fix: re-enable submit button on error
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Request Document";
     }
   });
+
 });
