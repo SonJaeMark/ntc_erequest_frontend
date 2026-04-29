@@ -209,20 +209,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const token = getAuthToken();
 
-      console.log(`=== LOAD LOGS DEBUG (Request ID: ${documentRequestId}) ===`);
+      console.log(`\n=== LOAD LOGS DEBUG (Request ID: ${documentRequestId}) ===`);
       console.log("Token exists:", !!token);
       console.log("Token length:", token?.length || 0);
-      if (token) {
-        console.log("Token value (first 40 chars):", token.substring(0, 40) + "...");
-      }
-      console.log("=== END DEBUG ===\n");
-
+      
       if (!token) {
         console.error("No auth token found");
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, {
+      // Log the full token and header
+      console.log("Full token:", token);
+      const authHeader = `Bearer ${token}`;
+      console.log("Authorization header:", authHeader.substring(0, 60) + "...");
+
+      const fetchOptions = {
         method: "GET",
         mode: "cors",
         cache: "no-store",
@@ -230,9 +231,24 @@ document.addEventListener("DOMContentLoaded", async () => {
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          "Authorization": authHeader,
+        },
+      };
+
+      console.log("Fetch URL:", `${BASE_URL}/logs/${documentRequestId}`);
+      console.log("Fetch options:", {
+        method: fetchOptions.method,
+        mode: fetchOptions.mode,
+        credentials: fetchOptions.credentials,
+        headers: {
+          "Accept": fetchOptions.headers.Accept,
+          "Content-Type": fetchOptions.headers["Content-Type"],
+          "Authorization": fetchOptions.headers.Authorization.substring(0, 60) + "...",
         },
       });
+      console.log("=== END DEBUG ===\n");
+
+      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, fetchOptions);
 
       if (!response.ok) {
         const errorText = await response.text();
