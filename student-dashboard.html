@@ -3,15 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>National Teachers College | Submit Request</title>
+    <title>NTC eRequest | Student Dashboard</title>
 
+    <!-- ============================================================ -->
+    <!-- FONTS -->
+    <!-- ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
+    <!-- ============================================================ -->
+    <!-- DEPENDENCIES -->
+    <!-- ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="auth-guard.js"></script>
+    <script src="auth-guard.js" defer></script>
 
+    <!-- ============================================================ -->
+    <!-- MOBILE MENU ANIMATION -->
+    <!-- ============================================================ -->
     <style>
         #mobile-menu {
             max-height: 0;
@@ -25,6 +34,9 @@
         }
     </style>
 
+    <!-- ============================================================ -->
+    <!-- TAILWIND CONFIG -->
+    <!-- ============================================================ -->
     <script>
         tailwind.config = {
             theme: {
@@ -36,10 +48,13 @@
             }
         }
     </script>
+
 </head>
 <body class="bg-slate-50 min-h-screen">
 
-    <!-- Navbar -->
+    <!-- ============================================================ -->
+    <!-- NAVBAR -->
+    <!-- ============================================================ -->
     <nav class="bg-white border-b border-gray-200 shadow-sm px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
 
@@ -52,19 +67,24 @@
 
             <!-- Desktop Nav Links -->
             <div class="hidden md:flex items-center gap-6">
-                <a href="student-dashboard.html" class="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Dashboard</a>
-                <a href="document-request.html" class="text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5">Request Document</a>
-                <a href="request-history.html" class="text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">My Requests</a>
+                <a href="#dashboard" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Dashboard</a>
+                <a href="#request-document" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Request Document</a>
+                <a href="#my-requests" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">My Requests</a>
             </div>
 
             <!-- Right: Hi + Name, Logout & Hamburger -->
             <div class="flex items-center gap-3">
-                <span class="text-sm text-gray-600 hidden sm:block">Hi, <span id="navbar-firstname" class="font-bold text-blue-900"></span></span>
-                <button id="logout-btn" class="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors active:transform active:scale-[0.98]">
+                <span class="text-sm text-gray-600 hidden sm:block">
+                    Hi, <span id="navbar-firstname" class="font-bold text-blue-900"></span>
+                </span>
+                <button id="logout-btn"
+                    class="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors active:transform active:scale-[0.98]">
                     Logout
                 </button>
                 <!-- Hamburger -->
-                <button id="hamburger-btn" class="md:hidden flex flex-col gap-1.5 p-1" aria-label="Toggle navigation menu">
+                <button id="hamburger-btn"
+                    class="md:hidden flex flex-col gap-1.5 p-1"
+                    aria-label="Toggle navigation menu">
                     <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
                     <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
                     <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
@@ -76,74 +96,127 @@
         <!-- Mobile Menu (smooth dropdown) -->
         <div id="mobile-menu" class="md:hidden border-t border-gray-100">
             <div class="flex flex-col gap-1 pt-3 pb-2">
-                <span class="text-sm text-gray-600 px-2 py-1.5">Hi, <span id="navbar-firstname-mobile" class="font-bold text-blue-900"></span></span>
-                <a href="student-dashboard.html" class="text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Dashboard</a>
-                <a href="document-request.html" class="text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg">Request Document</a>
-                <a href="request-history.html" class="text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">My Requests</a>
-                <button id="logout-btn-mobile" class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mt-1 active:transform active:scale-[0.98]">
+                <span class="text-sm text-gray-600 px-2 py-1.5">
+                    Hi, <span id="navbar-firstname-mobile" class="font-bold text-blue-900"></span>
+                </span>
+                <a href="#dashboard" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Dashboard</a>
+                <a href="#request-document" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Request Document</a>
+                <a href="#my-requests" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">My Requests</a>
+                <button id="logout-btn-mobile"
+                    class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mt-1 active:transform active:scale-[0.98]">
                     Logout
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- Form -->
-    <div class="flex items-center justify-center p-4 py-10">
-        <div class="w-full max-w-sm">
-            <form id="document-request-form" class="bg-white p-8 rounded-2xl shadow-xl border-t-4 border-blue-600">
-
-                <header class="text-center mb-8">
-                    <h2 class="text-3xl font-black text-blue-900 tracking-tight">Document Request</h2>
-                    <p class="text-gray-500 text-sm mt-1">Fill in the details below to submit your request</p>
-                </header>
-
-                <div class="mb-5">
-                    <label for="purpose" class="block text-sm font-bold text-gray-700 mb-1">Purpose</label>
-                    <select id="purpose" name="purpose" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                        <option value="" disabled selected>Select a purpose</option>
-                        <option value="WORK">Work</option>
-                        <option value="SCHOLARSHIP">Scholarship</option>
-                        <option value="TRANSFERRING_SCHOOL">Transferring School</option>
-                        <option value="OJT">OJT</option>
-                    </select>
-                </div>
-
-                <div class="mb-5">
-                    <label for="documentType" class="block text-sm font-bold text-gray-700 mb-1">Document type</label>
-                    <select id="documentType" name="documentType" class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
-                        <option value="" disabled selected>Select document type</option>
-                        <option value="TOR">TOR</option>
-                        <option value="CERTIFICATE_OF_ENROLLMENT">Certificate of Enrollment</option>
-                        <option value="GOOD_MORAL">Good Moral</option>
-                        <option value="DIPLOMA">Diploma</option>
-                        <option value="HONORABLE_DISMISSAL">Honorable Dismissal</option>
-                        <option value="CERTIFICATE_OF_REGISTRATION">Certificate of Registration</option>
-                    </select>
-                </div>
-
-                <div class="mb-5">
-                    <label for="additionalDetails" class="block text-sm font-bold text-gray-700 mb-1">Additional details</label>
-                    <textarea id="additionalDetails" name="additionalDetails" rows="3" placeholder="Provide any additional details..." class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"></textarea>
-                </div>
-
-                <div class="flex gap-3">
-                    <button type="button" id="cancel-btn"
-                        class="w-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
-                        Cancel
-                    </button>
-                    <button type="submit"
-                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
-                        Submit Request
-                    </button>
-                </div>
-
-            </form>
+    <!-- ============================================================ -->
+    <!-- SECTION: DASHBOARD -->
+    <!-- ============================================================ -->
+    <section id="dashboard" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+            <p class="text-gray-600">Welcome to your dashboard! Here you can view your document requests and their statuses.</p>
         </div>
-    </div>
+    </section>
 
-    <script src="studentDashBoardScript.js"></script>
+    <!-- ============================================================ -->
+    <!-- SECTION: REQUEST DOCUMENT (Form) -->
+    <!-- ============================================================ -->
+    <section id="request-document" class="hidden">
+        <div class="flex items-center justify-center p-4 py-10">
+            <div class="w-full max-w-lg">
+                <form id="document-request-form" class="bg-white p-8 md:p-10 lg:p-12 rounded-2xl shadow-xl border-t-4 border-blue-600">
+
+                    <header class="text-center mb-8">
+                        <h2 class="text-3xl font-black text-blue-900 tracking-tight">Document Request</h2>
+                        <p class="text-gray-500 text-sm mt-1">Fill in the details below to submit your request</p>
+                    </header>
+
+                    <!-- Purpose -->
+                    <div class="mb-5">
+                        <label for="purpose" class="block text-sm font-bold text-gray-700 mb-1">Purpose</label>
+                        <select id="purpose" name="purpose"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                            <option value="" disabled selected>Select a purpose</option>
+                            <option value="WORK">Work</option>
+                            <option value="SCHOLARSHIP">Scholarship</option>
+                            <option value="TRANSFERRING_SCHOOL">Transferring School</option>
+                            <option value="OJT">OJT</option>
+                        </select>
+                    </div>
+
+                    <!-- Document Type -->
+                    <div class="mb-5">
+                        <label for="documentType" class="block text-sm font-bold text-gray-700 mb-1">Document type</label>
+                        <select id="documentType" name="documentType"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all">
+                            <option value="" disabled selected>Select document type</option>
+                        </select>
+                    </div>
+
+                    <!-- Additional Details -->
+                    <div class="mb-5">
+                        <label for="additionalDetails" class="block text-sm font-bold text-gray-700 mb-1">Additional details</label>
+                        <textarea id="additionalDetails" name="additionalDetails" rows="3"
+                            placeholder="Provide any additional details..."
+                            class="w-full p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"></textarea>
+                    </div>
+
+                    <!-- Request Status (read-only) -->
+                    <div class="mb-5">
+                        <label for="requestStatus" class="block text-sm font-bold text-gray-700 mb-1">Request Status</label>
+                        <select id="requestStatus" name="requestStatus" disabled
+                            class="w-full p-2.5 border border-gray-300 rounded-lg text-sm bg-gray-100 text-gray-600 cursor-not-allowed">
+                            <option value="PENDING" selected>PENDING</option>
+                        </select>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex gap-3">
+                        <button type="button" id="cancel-btn"
+                            class="w-full border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
+                            Request Document
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECTION: MY REQUESTS -->
+    <!-- ============================================================ -->
+    <section id="my-requests" class="hidden p-4" >
+        <div class="max-w-7xl mx-auto p-2">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 block">My Requests</h2>
+        </div>
+        <div id="document-requests-container" class="max-w-7xl mx-auto p-2 bg-gray-100 rounded-lg shadow">
+            <p class="text-gray-600">Loading requests...</p>
+        </div>
+        
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
+    <script type="module" src="studentDashBoardScript.js?nocache=1"></script>
     <script>
+
+        // ============================================================
+        // DOM READY: Auth, navbar, SPA nav, logout, hamburger, cancel
+        // ============================================================
         document.addEventListener("DOMContentLoaded", () => {
+
+            // --- Auth guard: requires STUDENT role ---
+            requireRole(["STUDENT"]);
+
+            // --- Element references ---
             const firstNameEl = document.getElementById("navbar-firstname");
             const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
             const logoutBtn = document.getElementById("logout-btn");
@@ -152,6 +225,9 @@
             const mobileMenu = document.getElementById("mobile-menu");
             const cancelBtn = document.getElementById("cancel-btn");
 
+            const sections = ['dashboard', 'request-document', 'my-requests'];
+
+            // --- Helpers ---
             const getFirstName = () => {
                 const email = sessionStorage.getItem("email") ?? "";
                 return email.split("@")[0] ?? "Student";
@@ -163,23 +239,92 @@
                 window.location.href = "index.html";
             };
 
+            /**
+             * Show the target section and hide all others.
+             * Updates active styles for both desktop and mobile nav links.
+             */
+            const navigateTo = (targetId) => {
+
+                // --- Show/hide sections ---
+                sections.forEach(id => {
+                    const section = document.getElementById(id);
+                    if (section) {
+                        section.classList.toggle('hidden', id !== targetId);
+                    }
+                });
+
+                // --- Update desktop active link styles ---
+                document.querySelectorAll('.nav-link').forEach(navLink => {
+                    const linkTarget = navLink.getAttribute('href').substring(1);
+                    if (linkTarget === targetId) {
+                        navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
+                    } else {
+                        navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
+                    }
+                });
+
+                // --- Update mobile active link styles ---
+                document.querySelectorAll('.nav-link-mobile').forEach(navLink => {
+                    const linkTarget = navLink.getAttribute('href').substring(1);
+                    if (linkTarget === targetId) {
+                        navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
+                    } else {
+                        navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
+                    }
+                });
+            };
+
+            // --- Populate navbar name ---
             const firstName = getFirstName();
             if (firstNameEl) firstNameEl.textContent = firstName;
             if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
 
+            // --- Desktop nav link clicks ---
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    navigateTo(targetId);
+                });
+            });
+
+            // --- Mobile nav link clicks ---
+            document.querySelectorAll('.nav-link-mobile').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href').substring(1);
+                    navigateTo(targetId);
+                    // Close mobile menu after navigation
+                    mobileMenu.classList.remove('open');
+                });
+            });
+
+            // --- Logout buttons ---
             if (logoutBtn) logoutBtn.addEventListener("click", logout);
             if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
 
+            // --- Cancel button ---
             if (cancelBtn) cancelBtn.addEventListener("click", () => {
-                window.location.href = "student-dashboard.html";
+                navigateTo('dashboard');
             });
 
+            // --- Hamburger toggle ---
             if (hamburgerBtn) {
                 hamburgerBtn.addEventListener("click", () => {
                     mobileMenu.classList.toggle("open");
                 });
             }
+
+            // --- Show dashboard section by default on load ---
+            navigateTo('dashboard');
+
+            // --- Listen for navigation events dispatched from module scripts ---
+            window.addEventListener("navigateTo", (e) => {
+                navigateTo(e.detail.section);
+            });
+
         });
+
     </script>
 
 </body>
