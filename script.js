@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Submitting login request for:", email);
 
       const response = await fetch(
-        "https://ntc-erquest-system.onrender.com/auth/login",
+        "https://ntc-erquest-system-1.onrender.com/auth/login",
         {
           method: "POST",
           credentials: "include", // important for cookies
