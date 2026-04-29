@@ -195,6 +195,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const token = getAuthToken();
 
+      console.log(`=== LOAD LOGS DEBUG (Request ID: ${documentRequestId}) ===`);
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      if (token) {
+        console.log("Token value (first 40 chars):", token.substring(0, 40) + "...");
+      }
+      console.log("=== END DEBUG ===\n");
+
       if (!token) {
         console.error("No auth token found");
         return;
@@ -202,6 +210,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, {
         method: "GET",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
