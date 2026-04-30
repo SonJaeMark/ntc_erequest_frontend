@@ -135,8 +135,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      // --- Step 1: Fetch all requests ---
       const response = await fetch(`${BASE_URL}/api/document-request/student`, {
         method: "GET",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
@@ -153,6 +157,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       const requests = await response.json();
       const container = document.getElementById("document-requests-container");
 
+      // --- Step 2: Console log all requests ---
+      console.log("=== STUDENT DOCUMENT REQUESTS ===");
+      console.log("Total requests:", requests.length);
+      console.log("Requests:", requests);
+      requests.forEach((req, idx) => {
+        console.log(`  [${idx}] ID: ${req.id}, Type: ${req.documentType}, Status: ${req.status}, Date: ${req.requestedAt}`);
+      });
+      console.log("=== END REQUESTS ===\n");
+
       if (container && Array.isArray(requests)) {
         container.innerHTML = ""; // Clear existing content
 
@@ -161,7 +174,8 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        requests.forEach(async (request) => {
+        // --- Step 3: Render each request and load its logs ---
+        for (const request of requests) {
           const requestDiv = document.createElement("div");
           requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4";
 
@@ -180,7 +194,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           // Load logs for this request
           await loadRequestLogs(request.id);
-        });
+        }
       }
 
     } catch (error) {
@@ -195,19 +209,46 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const token = getAuthToken();
 
+      console.log(`\n=== LOAD LOGS DEBUG (Request ID: ${documentRequestId}) ===`);
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      
       if (!token) {
         console.error("No auth token found");
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, {
+      // Log the full token and header
+      console.log("Full token:", token);
+      const authHeader = `Bearer ${token}`;
+      console.log("Authorization header:", authHeader.substring(0, 60) + "...");
+
+      const fetchOptions = {
         method: "GET",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
+          "Authorization": authHeader,
+        },
+      };
+
+      console.log("Fetch URL:", `${BASE_URL}/logs/${documentRequestId}`);
+      console.log("Fetch options:", {
+        method: fetchOptions.method,
+        mode: fetchOptions.mode,
+        credentials: fetchOptions.credentials,
+        headers: {
+          "Accept": fetchOptions.headers.Accept,
+          "Content-Type": fetchOptions.headers["Content-Type"],
+          "Authorization": fetchOptions.headers.Authorization.substring(0, 60) + "...",
         },
       });
+      console.log("=== END DEBUG ===\n");
+
+      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, fetchOptions);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -217,6 +258,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const logs = await response.json();
       const logsContainer = document.getElementById(`logs-${documentRequestId}`);
+
+      // --- Console log the logs for this request ---
+      console.log(`--- Logs for Request ID ${documentRequestId} ---`);
+      console.log("Total logs:", logs.length);
+      if (Array.isArray(logs) && logs.length > 0) {
+        logs.forEach((log, idx) => {
+          console.log(`  [${idx}] Status: ${log.requestStatus}, Date: ${log.dateAction}, Remarks: ${log.remarks || 'N/A'}`);
+        });
+      }
+      console.log("---\n");
 
       if (logsContainer && Array.isArray(logs)) {
         if (logs.length === 0) {
