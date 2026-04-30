@@ -235,13 +235,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
       };
 
-      console.log("Fetch URL:", `${BASE_URL}/logs/${documentRequestId}`);
+      console.log("Fetch URL:", `${BASE_URL}/api/document-request/logs/${documentRequestId}`);
       console.log("Fetch options:", {
         method: fetchOptions.method,
         mode: fetchOptions.mode,
         credentials: fetchOptions.credentials,
         headers: {
-          "Accept": fetchOptions.headers.Accept,
           "Content-Type": fetchOptions.headers["Content-Type"],
           "Authorization": fetchOptions.headers.Authorization.substring(0, 60) + "...",
         },
