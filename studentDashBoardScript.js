@@ -248,7 +248,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
       console.log("=== END DEBUG ===\n");
 
-      const response = await fetch(`${BASE_URL}/logs/${documentRequestId}`, fetchOptions);
+      const response = await fetch(`${BASE_URL}/api/document-request/logs/${documentRequestId}`, fetchOptions);
 
       if (!response.ok) {
         const errorText = await response.text();
