@@ -229,7 +229,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         cache: "no-store",
         credentials: "include",
         headers: {
-          "Accept": "application/json",
           "Content-Type": "application/json",
           "Authorization": authHeader,
         },
