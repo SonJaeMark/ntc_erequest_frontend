@@ -4,6 +4,7 @@ import {
   getStudentRequests,
   submitDocumentRequest,
 } from "./apiClient/documentApi.js";
+import { logout as apiLogout } from "./apiClient/authApi.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // --- Auth guard: requires STUDENT role ---
@@ -26,11 +27,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       return email.split("@")[0] ?? "Student";
   };
 
-  const logout = () => {
-      logout(sessionStorage.getItem("ntc_access_token"), localStorage.getItem("ntc_refresh_token"))
-      sessionStorage.clear();
-      localStorage.clear();
-      window.location.href = "index.html";
+  const logout = async () => {
+      try {
+        const token = sessionStorage.getItem("ntc_access_token");
+        const refreshToken = localStorage.getItem("ntc_refresh_token");
+        if (token && refreshToken) {
+          await apiLogout(refreshToken, token);
+        }
+      } catch (err) {
+        console.error("Logout API call failed:", err);
+      } finally {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
   };
 
   /**
@@ -427,8 +437,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         form.reset();
         await loadDocumentRequests();
 
-        // Bug 1 fix: dispatch custom event for SPA navigation instead of full page reload
-        window.dispatchEvent(new CustomEvent("navigateTo", { detail: { section: "dashboard" } }));
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Request Document";
       } else {
         throw new Error("No request ID returned by API");
       }
@@ -437,7 +448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.error("Error submitting request:", error.message);
       alert("Failed to submit request: " + error.message);
 
-      // Bug 2 fix: re-enable submit button on error
+      // Re-enable submit button on error
       submitBtn.disabled = false;
       submitBtn.textContent = "Request Document";
     }
