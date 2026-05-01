@@ -429,9 +429,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await submitDocumentRequest(token, requestBody);
       const requestId = data?.requestId ?? data?.id ?? data?.data?.requestId ?? null;
 
+      const messageContainer = document.getElementById("status-message");
+
       if (requestId) {
         console.log("Request submitted successfully. Request ID:", requestId);
-        alert("Document request submitted successfully!");
+        // Show Success Message
+        messageContainer.textContent = "Document request submitted successfully!";
+        messageContainer.className = "w-full max-w-lg mb-4 p-4 rounded-lg text-sm font-medium border bg-green-50 border-green-200 text-green-700";
+        messageContainer.classList.remove("hidden");
 
         // Reset form and refresh requests list
         form.reset();
@@ -446,12 +451,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     } catch (error) {
       console.error("Error submitting request:", error.message);
-      alert("Failed to submit request: " + error.message);
+      const messageContainer = document.getElementById("status-message");
+    
+      // Check if the error is the "Active Request" message or a generic one
+      // Note: Adjust 'error.message' depending on how your apiRequest handles 400 errors
+      let errorMessage = "An error occurred. Please try again.";
+      // Try to parse the specific message from your API response
+      if (error.message) {
+          try {
+              // In case the error.message is a JSON string
+              const parsedError = JSON.parse(error.message);
+              errorMessage = parsedError.message;
+          } catch (e) {
+              // If it's already a string, use it directly
+              errorMessage = error.message;
+          }
+      }
 
-      // Re-enable submit button on error
+      // Show Error Message
+      // Display the message with Red styling
+      messageContainer.textContent = errorMessage;
+      messageContainer.className = "w-full max-w-lg mb-4 p-4 rounded-xl border bg-red-50 border-red-200 text-red-800 block";
+
+      // Re-enable submit button
       submitBtn.disabled = false;
       submitBtn.textContent = "Request Document";
-    }
+      
+      console.error("Submission failed:", errorMessage);
+      }
   });
 
 });
