@@ -5,49 +5,149 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTC eRequest | Registrar Dashboard</title>
 
-    <!-- ============================================================ -->
     <!-- FONTS -->
-    <!-- ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
-    <!-- ============================================================ -->
     <!-- DEPENDENCIES -->
-    <!-- ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Assuming auth-guard.js is in the same directory -->
     <script src="auth-guard.js"></script>
 
-    <!-- ============================================================ -->
     <!-- TAILWIND CONFIG -->
-    <!-- ============================================================ -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        // This replaces the default Tailwind 'sans' font with Lato
                         sans: ['Lato', 'ui-sans-serif', 'system-ui'],
+                    },
+                    colors: {
+                        'ntc-red': '#800000', // Example NTC Maroon
+                        'ntc-gold': '#FFD700',
                     }
                 }
             }
         }
     </script>
-
 </head>
-<body>
+<body class="bg-gray-50 font-sans antialiased">
 
-    <!-- ============================================================ -->
+    <div class="flex h-screen overflow-hidden">
+
+        <!-- SIDEBAR -->
+        <aside class="hidden md:flex flex-col w-64 bg-ntc-red text-white">
+            <div class="p-6 text-center border-b border-red-900">
+                <h1 class="text-2xl font-black tracking-tight">NTC <span class="text-ntc-gold">eRequest</span></h1>
+                <p class="text-xs opacity-75 uppercase mt-1">Registrar Portal</p>
+            </div>
+            
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" class="flex items-center space-x-3 bg-white bg-opacity-10 px-4 py-3 rounded-lg font-bold">
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
+                    <span>Pending Requests</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
+                    <span>Document Archive</span>
+                </a>
+                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
+                    <span>Reports</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-red-900">
+                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm hover:text-ntc-gold transition">
+                    Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col overflow-y-auto">
+            
+            <!-- HEADER / TOP NAV -->
+            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-gray-800">Overview</h2>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">Welcome, <strong>Registrar Admin</strong></span>
+                    <div class="h-10 w-10 rounded-full bg-gray-200 border border-gray-300"></div>
+                </div>
+            </header>
+
+            <!-- DASHBOARD CONTENT -->
+            <main class="p-8">
+                
+                <!-- STAT CARDS -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm text-gray-500 font-bold uppercase">New Requests</p>
+                        <h3 class="text-3xl font-black text-ntc-red">24</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm text-gray-500 font-bold uppercase">Processing</p>
+                        <h3 class="text-3xl font-black text-blue-600">12</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <p class="text-sm text-gray-500 font-bold uppercase">Completed Today</p>
+                        <h3 class="text-3xl font-black text-green-600">45</h3>
+                    </div>
+                </div>
+
+                <!-- REQUESTS TABLE -->
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800">Recent Document Requests</h3>
+                        <button class="text-sm text-ntc-red font-bold hover:underline">View All</button>
+                    </div>
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-bold">
+                            <tr>
+                                <th class="px-6 py-4">Student Name</th>
+                                <th class="px-6 py-4">Document Type</th>
+                                <th class="px-6 py-4">Date Requested</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-sm">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">Dela Cruz, Juan</td>
+                                <td class="px-6 py-4 text-gray-600">Official Transcript of Records</td>
+                                <td class="px-6 py-4 text-gray-600">Oct 24, 2023</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Pending</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-ntc-red font-bold hover:text-red-800">Process</button>
+                                </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 font-medium text-gray-900">Santos, Maria</td>
+                                <td class="px-6 py-4 text-gray-600">Certificate of Enrollment</td>
+                                <td class="px-6 py-4 text-gray-600">Oct 23, 2023</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">In Review</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    <button class="text-ntc-red font-bold hover:text-red-800">Process</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
     <!-- AUTH GUARD -->
-    <!-- ============================================================ -->
     <script>
+        // requirement: user must be logged in as REGISTRAR
         requireRole(["REGISTRAR"]);
     </script>
-
-    <!-- ============================================================ -->
-    <!-- PAGE CONTENT -->
-    <!-- ============================================================ -->
-    <h1>Registrar Dashboard</h1>
 
 </body>
 </html>
