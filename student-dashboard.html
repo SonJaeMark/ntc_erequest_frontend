@@ -16,7 +16,7 @@
     <!-- DEPENDENCIES -->
     <!-- ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="auth-guard.js" defer></script>
+    <script src="js/auth-guard.js" defer></script>
 
     <!-- ============================================================ -->
     <!-- MOBILE MENU ANIMATION -->
@@ -205,8 +205,8 @@
     <!-- ============================================================ -->
     <!-- SCRIPTS -->
     <!-- ============================================================ -->
-    <script type="module" src="studentDashBoardScript.js?nocache=1"></script>
-    <script>
+    <script type="module" src="js/studentDashBoardScript.js?nocache=1"></script>
+    <!-- <script>
 
         // ============================================================
         // DOM READY: Auth, navbar, SPA nav, logout, hamburger, cancel
@@ -234,6 +234,7 @@
             };
 
             const logout = () => {
+                logout(sessionStorage.getItem("ntc_access_token"), localStorage.getItem("ntc_refresh_token"))
                 sessionStorage.clear();
                 localStorage.clear();
                 window.location.href = "index.html";
@@ -325,7 +326,7 @@
 
         });
 
-    </script>
+    </script> -->
 
 </body>
 </html>

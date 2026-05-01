@@ -1,3 +1,5 @@
+import { login } from "./apiClient/authApi.js";
+
 document.addEventListener("DOMContentLoaded", () => {
 
   // ============================================================
@@ -7,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const AUTH_TOKEN_KEY = "ntc_access_token";
   const AUTH_REFRESH_KEY = "ntc_refresh_token";
   const AUTH_ROLE_KEY = "ntc_user_role";
-  const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
   const form = document.getElementById("login-form");
   const submitBtn = document.getElementById("submit-btn");
   const btnText = document.getElementById("btn-text");
@@ -126,22 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       console.log("Submitting login request for:", email);
 
       // --- Send login request ---
-      const response = await fetch(`${BASE_URL}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const text = await response.text();
-
-      if (!response.ok) {
-        throw new Error(`Login failed: ${response.status} - ${text}`);
-      }
-
-      // --- Parse response ---
-      const data = text ? JSON.parse(text) : null;
+      const data = await login(email, password);
 
       if (!data || !data.accessToken) {
         throw new Error("Invalid response from server. Please try again.");

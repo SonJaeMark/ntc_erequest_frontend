@@ -1,11 +1,127 @@
+import {
+  getRequestLogs,
+  getStudentDocuments,
+  getStudentRequests,
+  submitDocumentRequest,
+} from "./apiClient/documentApi.js";
+
 document.addEventListener("DOMContentLoaded", async () => {
+  // --- Auth guard: requires STUDENT role ---
+  requireRole(["STUDENT"]);
+
+  // --- Element references ---
+  const firstNameEl = document.getElementById("navbar-firstname");
+  const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
+  const logoutBtn = document.getElementById("logout-btn");
+  const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const cancelBtn = document.getElementById("cancel-btn");
+
+  const sections = ['dashboard', 'request-document', 'my-requests'];
+
+  // --- Helpers ---
+  const getFirstName = () => {
+      const email = sessionStorage.getItem("email") ?? "";
+      return email.split("@")[0] ?? "Student";
+  };
+
+  const logout = () => {
+      logout(sessionStorage.getItem("ntc_access_token"), localStorage.getItem("ntc_refresh_token"))
+      sessionStorage.clear();
+      localStorage.clear();
+      window.location.href = "index.html";
+  };
+
+  /**
+   * Show the target section and hide all others.
+   * Updates active styles for both desktop and mobile nav links.
+   */
+  const navigateTo = (targetId) => {
+
+      // --- Show/hide sections ---
+      sections.forEach(id => {
+          const section = document.getElementById(id);
+          if (section) {
+              section.classList.toggle('hidden', id !== targetId);
+          }
+      });
+
+      // --- Update desktop active link styles ---
+      document.querySelectorAll('.nav-link').forEach(navLink => {
+          const linkTarget = navLink.getAttribute('href').substring(1);
+          if (linkTarget === targetId) {
+              navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
+          } else {
+              navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
+          }
+      });
+
+      // --- Update mobile active link styles ---
+      document.querySelectorAll('.nav-link-mobile').forEach(navLink => {
+          const linkTarget = navLink.getAttribute('href').substring(1);
+          if (linkTarget === targetId) {
+              navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
+          } else {
+              navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
+          }
+      });
+  };
+
+  // --- Populate navbar name ---
+  const firstName = getFirstName();
+  if (firstNameEl) firstNameEl.textContent = firstName;
+  if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
+
+  // --- Desktop nav link clicks ---
+  document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute('href').substring(1);
+          navigateTo(targetId);
+      });
+  });
+
+  // --- Mobile nav link clicks ---
+  document.querySelectorAll('.nav-link-mobile').forEach(link => {
+      link.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = link.getAttribute('href').substring(1);
+          navigateTo(targetId);
+          // Close mobile menu after navigation
+          mobileMenu.classList.remove('open');
+      });
+  });
+
+  // --- Logout buttons ---
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
+
+  // --- Cancel button ---
+  if (cancelBtn) cancelBtn.addEventListener("click", () => {
+      navigateTo('dashboard');
+  });
+
+  // --- Hamburger toggle ---
+  if (hamburgerBtn) {
+      hamburgerBtn.addEventListener("click", () => {
+          mobileMenu.classList.toggle("open");
+      });
+  }
+
+  // --- Show dashboard section by default on load ---
+  navigateTo('dashboard');
+
+  // --- Listen for navigation events dispatched from module scripts ---
+  window.addEventListener("navigateTo", (e) => {
+      navigateTo(e.detail.section);
+  });
 
   // ============================================================
   // CONSTANTS & CONFIGURATION
   // ============================================================
 
   const AUTH_TOKEN_KEY = "ntc_access_token";
-  const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
   const form = document.getElementById("document-request-form");
 
   if (!form) {
@@ -59,26 +175,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/api/document/student`, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-store",
-        credentials: "include",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to fetch documents:", response.status, errorText);
-        alert("Failed to load documents. Please try again.");
-        return;
-      }
-
-      const documents = await response.json();
+      const documents = await getStudentDocuments(token);
       const documentTypeSelect = document.getElementById("documentType");
 
       if (documentTypeSelect && Array.isArray(documents) && documents.length > 0) {
@@ -136,25 +233,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // --- Step 1: Fetch all requests ---
-      const response = await fetch(`${BASE_URL}/api/document-request/student`, {
-        method: "GET",
-        mode: "cors",
-        cache: "no-store",
-        credentials: "include",
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to fetch requests:", response.status, errorText);
-        return;
-      }
-
-      const requests = await response.json();
+      const requests = await getStudentRequests(token);
       const container = document.getElementById("document-requests-container");
 
       // --- Step 2: Console log all requests ---
@@ -218,43 +297,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // Log the full token and header
-      console.log("Full token:", token);
-      const authHeader = `Bearer ${token}`;
-      console.log("Authorization header:", authHeader.substring(0, 60) + "...");
-
-      const fetchOptions = {
-        method: "GET",
-        mode: "cors",
-        cache: "no-store",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": authHeader,
-        },
-      };
-
-      console.log("Fetch URL:", `${BASE_URL}/api/document-request/logs/${documentRequestId}`);
-      console.log("Fetch options:", {
-        method: fetchOptions.method,
-        mode: fetchOptions.mode,
-        credentials: fetchOptions.credentials,
-        headers: {
-          "Content-Type": fetchOptions.headers["Content-Type"],
-          "Authorization": fetchOptions.headers.Authorization.substring(0, 60) + "...",
-        },
-      });
       console.log("=== END DEBUG ===\n");
-
-      const response = await fetch(`${BASE_URL}/api/document-request/logs/${documentRequestId}`, fetchOptions);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Failed to fetch logs:", response.status, errorText);
-        return;
-      }
-
-      const logs = await response.json();
+      const logs = await getRequestLogs(token, documentRequestId);
       const logsContainer = document.getElementById(`logs-${documentRequestId}`);
 
       // --- Console log the logs for this request ---
@@ -371,39 +415,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       console.log("Request payload:", requestBody);
 
-      // --- Build headers ---
-      const headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      };
-
-      // --- Build fetch options ---
-      const fetchOptions = {
-        method: "POST",
-        mode: "cors",
-        cache: "no-store",
-        credentials: "include",
-        headers: headers,
-        body: JSON.stringify(requestBody),
-      };
-
-      console.log("Request headers:");
-      console.log("  Accept:", headers.Accept);
-      console.log("  Content-Type:", headers["Content-Type"]);
-      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
-      console.log("Fetch options:", fetchOptions);
-
       // --- Send request ---
-      const response = await fetch(`${BASE_URL}/api/document-request/submit`, fetchOptions);
-      const text = await response.text();
-
-      if (!response.ok) {
-        throw new Error(`Request failed: ${response.status} - ${text}`);
-      }
-
-      // --- Handle response ---
-      const data = text ? JSON.parse(text) : null;
+      const data = await submitDocumentRequest(token, requestBody);
       const requestId = data?.requestId ?? data?.id ?? data?.data?.requestId ?? null;
 
       if (requestId) {
