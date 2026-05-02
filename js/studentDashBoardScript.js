@@ -4,6 +4,7 @@ import {
   getStudentRequests,
   submitDocumentRequest,
 } from "./apiClient/documentApi.js";
+import { logout as apiLogout } from "./apiClient/authApi.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // --- Auth guard: requires STUDENT role ---
@@ -26,11 +27,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       return email.split("@")[0] ?? "Student";
   };
 
-  const logout = () => {
-      logout(sessionStorage.getItem("ntc_access_token"), localStorage.getItem("ntc_refresh_token"))
-      sessionStorage.clear();
-      localStorage.clear();
-      window.location.href = "index.html";
+  const logout = async () => {
+      try {
+        const token = sessionStorage.getItem("ntc_access_token");
+        const refreshToken = localStorage.getItem("ntc_refresh_token");
+        if (token && refreshToken) {
+          await apiLogout(refreshToken, token);
+        }
+      } catch (err) {
+        console.error("Logout API call failed:", err);
+      } finally {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.href = "index.html";
+      }
   };
 
   /**
@@ -256,24 +266,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         // --- Step 3: Render each request and load its logs ---
         for (const request of requests) {
           const requestDiv = document.createElement("div");
-          requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4";
+          requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4 cursor-pointer hover:bg-gray-50 transition-colors";
+          // Added 'cursor-pointer' and 'hover' for better UX
 
           requestDiv.innerHTML = `
-            <h1 class="text-xl font-bold text-gray-700 mb-2">${formatLabel(request.documentType)}</h1>
-            <div>
-              <h5 class="text-lg font-bold text-gray-600">Status: ${request.status}</h5>
-              <p>${new Date(request.requestedAt).toLocaleDateString()}</p>
+            <div class="flex justify-between items-center">
+              <div>
+                <h1 class="text-xl font-bold text-gray-700">${formatLabel(request.documentType)}</h1>
+                <p class="text-sm text-gray-500">${new Date(request.requestedAt).toLocaleDateString()}</p>
+              </div>
+              <div class="text-right">
+                <span class="px-3 py-1 rounded-full text-sm font-bold ${request.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
+                  ${request.status}
+                </span>
+              </div>
             </div>
-            <div id="logs-${request.id}" class="mt-4">
+            <!-- Log container is hidden by default -->
+            <div id="logs-${request.id}" class="mt-4 pt-4 border-t border-gray-100 hidden">
               <p class="text-sm text-gray-500">Loading logs...</p>
             </div>
           `;
 
-          container.appendChild(requestDiv);
+          // Toggle Logic
+          requestDiv.onclick = async () => {
+            const logsContainer = document.getElementById(`logs-${request.id}`);
+            const isHidden = logsContainer.classList.contains('hidden');
 
-          // Load logs for this request
-          await loadRequestLogs(request.id);
+            // Close all other open logs first
+            document.querySelectorAll('[id^="logs-"]').forEach(el => el.classList.add('hidden'));
+
+            // If it was hidden, open it and load data
+            if (isHidden) {
+              logsContainer.classList.remove('hidden');
+              await loadRequestLogs(request.id);
+            }
+          };
+
+          container.appendChild(requestDiv);
         }
+
       }
 
     } catch (error) {
@@ -419,28 +450,56 @@ document.addEventListener("DOMContentLoaded", async () => {
       const data = await submitDocumentRequest(token, requestBody);
       const requestId = data?.requestId ?? data?.id ?? data?.data?.requestId ?? null;
 
+      const messageContainer = document.getElementById("status-message");
+
       if (requestId) {
         console.log("Request submitted successfully. Request ID:", requestId);
-        alert("Document request submitted successfully!");
+        // Show Success Message
+        messageContainer.textContent = "Document request submitted successfully!";
+        messageContainer.className = "w-full max-w-lg mb-4 p-4 rounded-lg text-sm font-medium border bg-green-50 border-green-200 text-green-700";
+        messageContainer.classList.remove("hidden");
 
         // Reset form and refresh requests list
         form.reset();
         await loadDocumentRequests();
 
-        // Bug 1 fix: dispatch custom event for SPA navigation instead of full page reload
-        window.dispatchEvent(new CustomEvent("navigateTo", { detail: { section: "dashboard" } }));
+        // Re-enable submit button
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Request Document";
       } else {
         throw new Error("No request ID returned by API");
       }
 
     } catch (error) {
       console.error("Error submitting request:", error.message);
-      alert("Failed to submit request: " + error.message);
+      const messageContainer = document.getElementById("status-message");
+    
+      // Check if the error is the "Active Request" message or a generic one
+      // Note: Adjust 'error.message' depending on how your apiRequest handles 400 errors
+      let errorMessage = "An error occurred. Please try again.";
+      // Try to parse the specific message from your API response
+      if (error.message) {
+          try {
+              // In case the error.message is a JSON string
+              const parsedError = JSON.parse(error.message);
+              errorMessage = parsedError.message;
+          } catch (e) {
+              // If it's already a string, use it directly
+              errorMessage = error.message;
+          }
+      }
 
-      // Bug 2 fix: re-enable submit button on error
+      // Show Error Message
+      // Display the message with Red styling
+      messageContainer.textContent = errorMessage;
+      messageContainer.className = "w-full max-w-lg mb-4 p-4 rounded-xl border bg-red-50 border-red-200 text-red-800 block";
+
+      // Re-enable submit button
       submitBtn.disabled = false;
       submitBtn.textContent = "Request Document";
-    }
+      
+      console.error("Submission failed:", errorMessage);
+      }
   });
 
 });

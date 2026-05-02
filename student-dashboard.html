@@ -131,6 +131,7 @@
                     <header class="text-center mb-8">
                         <h2 class="text-3xl font-black text-blue-900 tracking-tight">Document Request</h2>
                         <p class="text-gray-500 text-sm mt-1">Fill in the details below to submit your request</p>
+                        <div id="status-message" class="hidden w-full max-w-lg mb-4 p-4 rounded-xl border text-sm transition-all"></div>
                     </header>
 
                     <!-- Purpose -->
@@ -199,134 +200,11 @@
         <div id="document-requests-container" class="max-w-7xl mx-auto p-2 bg-gray-100 rounded-lg shadow">
             <p class="text-gray-600">Loading requests...</p>
         </div>
-        
     </section>
 
     <!-- ============================================================ -->
     <!-- SCRIPTS -->
     <!-- ============================================================ -->
     <script type="module" src="js/studentDashBoardScript.js?nocache=1"></script>
-    <!-- <script>
-
-        // ============================================================
-        // DOM READY: Auth, navbar, SPA nav, logout, hamburger, cancel
-        // ============================================================
-        document.addEventListener("DOMContentLoaded", () => {
-
-            // --- Auth guard: requires STUDENT role ---
-            requireRole(["STUDENT"]);
-
-            // --- Element references ---
-            const firstNameEl = document.getElementById("navbar-firstname");
-            const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
-            const logoutBtn = document.getElementById("logout-btn");
-            const logoutBtnMobile = document.getElementById("logout-btn-mobile");
-            const hamburgerBtn = document.getElementById("hamburger-btn");
-            const mobileMenu = document.getElementById("mobile-menu");
-            const cancelBtn = document.getElementById("cancel-btn");
-
-            const sections = ['dashboard', 'request-document', 'my-requests'];
-
-            // --- Helpers ---
-            const getFirstName = () => {
-                const email = sessionStorage.getItem("email") ?? "";
-                return email.split("@")[0] ?? "Student";
-            };
-
-            const logout = () => {
-                logout(sessionStorage.getItem("ntc_access_token"), localStorage.getItem("ntc_refresh_token"))
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.href = "index.html";
-            };
-
-            /**
-             * Show the target section and hide all others.
-             * Updates active styles for both desktop and mobile nav links.
-             */
-            const navigateTo = (targetId) => {
-
-                // --- Show/hide sections ---
-                sections.forEach(id => {
-                    const section = document.getElementById(id);
-                    if (section) {
-                        section.classList.toggle('hidden', id !== targetId);
-                    }
-                });
-
-                // --- Update desktop active link styles ---
-                document.querySelectorAll('.nav-link').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
-                    } else {
-                        navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
-                    }
-                });
-
-                // --- Update mobile active link styles ---
-                document.querySelectorAll('.nav-link-mobile').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
-                    } else {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
-                    }
-                });
-            };
-
-            // --- Populate navbar name ---
-            const firstName = getFirstName();
-            if (firstNameEl) firstNameEl.textContent = firstName;
-            if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
-
-            // --- Desktop nav link clicks ---
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = link.getAttribute('href').substring(1);
-                    navigateTo(targetId);
-                });
-            });
-
-            // --- Mobile nav link clicks ---
-            document.querySelectorAll('.nav-link-mobile').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    const targetId = link.getAttribute('href').substring(1);
-                    navigateTo(targetId);
-                    // Close mobile menu after navigation
-                    mobileMenu.classList.remove('open');
-                });
-            });
-
-            // --- Logout buttons ---
-            if (logoutBtn) logoutBtn.addEventListener("click", logout);
-            if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
-
-            // --- Cancel button ---
-            if (cancelBtn) cancelBtn.addEventListener("click", () => {
-                navigateTo('dashboard');
-            });
-
-            // --- Hamburger toggle ---
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener("click", () => {
-                    mobileMenu.classList.toggle("open");
-                });
-            }
-
-            // --- Show dashboard section by default on load ---
-            navigateTo('dashboard');
-
-            // --- Listen for navigation events dispatched from module scripts ---
-            window.addEventListener("navigateTo", (e) => {
-                navigateTo(e.detail.section);
-            });
-
-        });
-
-    </script> -->
-
 </body>
 </html>
