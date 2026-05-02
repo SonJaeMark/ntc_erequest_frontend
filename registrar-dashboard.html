@@ -3,32 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NTC Registrar Dashboard</title>
+    <title>NTC eRequest | Registrar Dashboard</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="auth-guard.js"></script>
+    <script src="js/auth-guard.js"></script>
+
+    <!-- ============================================================ -->
+    <!-- MOBILE MENU ANIMATION -->
+    <!-- ============================================================ -->
+    <style>
+        #mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+        #mobile-menu.open {
+            max-height: 400px;
+            opacity: 1;
+        }
+    </style>
 
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
-                        // This replaces the default Tailwind 'sans' font with Lato
                         sans: ['Lato', 'ui-sans-serif', 'system-ui'],
                     }
                 }
             }
         }
     </script>
+
 </head>
-<body>
-    <script>
-        requireRole(["REGISTRAR"]);
-    </script>
-    <h1>Registrar Dashboard</h1>
+<body class="bg-slate-50 min-h-screen">
+
+    <!-- ============================================================ -->
+    <!-- NAVBAR -->
+    <!-- ============================================================ -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 text-white font-black text-sm px-2.5 py-1.5 rounded-lg tracking-tight">NTC</div>
+                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight">National Teachers College | Registrar</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600 hidden sm:block">
+                    Hi, <span id="navbar-firstname" class="font-bold text-blue-900"></span>
+                </span>
+                <button id="logout-btn" class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ============================================================ -->
+    <!-- POOL REQUESTS SECTION -->
+    <!-- ============================================================ -->
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h2 class="text-3xl font-black text-blue-900 tracking-tight">Pool Requests</h2>
+            <p class="text-gray-500">Manage and process student document requests</p>
+        </header>
+
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Document Type</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date Requested</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pool-requests-table-body" class="divide-y divide-gray-100">
+                        <!-- Requests will be loaded here -->
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">Loading requests...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
+    <script type="module" src="js/registrarDashBoard.js"></script>
+
 </body>
 </html>
