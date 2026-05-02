@@ -41,55 +41,22 @@
     </script>
 
 </head>
-<body>
+<body class="bg-slate-50 min-h-screen">
 
     <!-- ============================================================ -->
     <!-- NAVBAR -->
     <!-- ============================================================ -->
     <nav class="bg-white border-b border-gray-200 shadow-sm px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-
             <div class="flex items-center gap-2">
                 <div class="bg-blue-600 text-white font-black text-sm px-2.5 py-1.5 rounded-lg tracking-tight">NTC</div>
-                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight hidden sm:block">National Teachers College</span>
-                <span class="text-blue-900 font-black text-base tracking-tight sm:hidden">NTC</span>
+                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight">National Teachers College | Registrar</span>
             </div>
-
-            <div class="hidden md:flex items-center gap-6">
-                <a href="#dashboard" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Dashboard</a>
-                <a href="#request-pool" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Request Pool</a>
-                <a href="#my-requests" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">My Requests</a>
-            </div>
-
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-600 hidden sm:block">
                     Hi, <span id="navbar-firstname" class="font-bold text-blue-900"></span>
                 </span>
-                <button id="logout-btn"
-                    class="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors active:transform active:scale-[0.98]">
-                    Logout
-                </button>
-                <button id="hamburger-btn"
-                    class="md:hidden flex flex-col gap-1.5 p-1"
-                    aria-label="Toggle navigation menu">
-                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
-                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
-                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
-                </button>
-            </div>
-
-        </div>
-
-        <div id="mobile-menu" class="md:hidden border-t border-gray-100">
-            <div class="flex flex-col gap-1 pt-3 pb-2">
-                <span class="text-sm text-gray-600 px-2 py-1.5">
-                    Hi, <span id="navbar-firstname-mobile" class="font-bold text-blue-900"></span>
-                </span>
-                <a href="#dashboard" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Dashboard</a>
-                <a href="#request-pool" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Request Pool</a>
-                <a href="#my-requests" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">My Requests</a>
-                <button id="logout-btn-mobile"
-                    class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mt-1 active:transform active:scale-[0.98]">
+                <button id="logout-btn" class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors">
                     Logout
                 </button>
             </div>
@@ -97,421 +64,42 @@
     </nav>
 
     <!-- ============================================================ -->
-    <!-- SECTION: REQUEST POOL -->
+    <!-- POOL REQUESTS SECTION -->
     <!-- ============================================================ -->
-    <section id="request-pool" class="hidden max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8">
+        <header class="mb-8">
+            <h2 class="text-3xl font-black text-blue-900 tracking-tight">Pool Requests</h2>
+            <p class="text-gray-500">Manage and process student document requests</p>
+        </header>
 
-        <h1 class="text-xl font-black text-gray-800 mb-5 tracking-tight">Document Pool</h1>
-
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
+                <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b border-gray-200 bg-gray-50">
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-28">ID</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Document Type</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Requested At</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-48">Action</th>
+                        <tr class="bg-gray-50 border-b border-gray-100">
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Document Type</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date Requested</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
-
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-001</td>
-                            <td class="px-5 py-4 font-bold text-gray-700">Transcript of Records</td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0">MA</div>
-                                    <span class="font-bold text-gray-700">Maria Aquino</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4 text-gray-500">Apr 30, 2026 · 9:14 AM</td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">Accept</button>
-                                    <button onclick="openPoolModal('REQ-001', 'Transcript of Records', 'Maria Aquino', 'MA', 'Apr 30, 2026 · 9:14 AM')"
-                                        class="text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">View</button>
-                                </div>
-                            </td>
+                    <tbody id="pool-requests-table-body" class="divide-y divide-gray-100">
+                        <!-- Requests will be loaded here -->
+                        <tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">Loading requests...</td>
                         </tr>
-
                     </tbody>
                 </table>
             </div>
         </div>
-
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- SECTION: MY REQUESTS -->
-    <!-- ============================================================ -->
-    <section id="my-requests" class="hidden max-w-7xl mx-auto px-4 py-8">
-
-        <h1 class="text-xl font-black text-gray-800 mb-5 tracking-tight">Requests</h1>
-
-        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="border-b border-gray-200 bg-gray-50">
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-28">ID</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Document Type</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Requested At</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Payment Status</th>
-                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-48">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-
-                        <!-- Row 1: PAID -->
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-001</td>
-                            <td class="px-5 py-4 font-bold text-gray-700">Transcript of Records</td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0">MA</div>
-                                    <span class="font-bold text-gray-700">Maria Aquino</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4 text-gray-500">Apr 30, 2026 · 9:14 AM</td>
-                            <td class="px-5 py-4">
-                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
-                                    <button class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
-                                    <button onclick="openRequestsModal('REQ-001', 'Transcript of Records', 'Maria Aquino', 'MA', 'Apr 30, 2026 · 9:14 AM', 'paid', '100123', '₱350.00', 'May 1, 2026 · 10:22 AM', 'REF-20260501-XK92')"
-                                        class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 2: UNPAID -->
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-002</td>
-                            <td class="px-5 py-4 font-bold text-gray-700">Certificate of Enrollment</td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2.5">
-                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black flex-shrink-0">JR</div>
-                                    <span class="font-bold text-gray-700">Jose Reyes</span>
-                                </div>
-                            </td>
-                            <td class="px-5 py-4 text-gray-500">May 1, 2026 · 2:45 PM</td>
-                            <td class="px-5 py-4">
-                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>
-                            </td>
-                            <td class="px-5 py-4">
-                                <div class="flex items-center gap-2">
-                                    <button class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
-                                    <button class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
-                                    <button onclick="openRequestsModal('REQ-002', 'Certificate of Enrollment', 'Jose Reyes', 'JR', 'May 1, 2026 · 2:45 PM', 'unpaid', null, null, null, null)"
-                                        class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
-                                </div>
-                            </td>
-                        </tr>
-
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-    </section>
+    </main>
 
     <!-- ============================================================ -->
-    <!-- SECTION: DASHBOARD -->
+    <!-- SCRIPTS -->
     <!-- ============================================================ -->
-    <section id="dashboard" class="hidden">
-        <div class="max-w-7xl mx-auto px-4 py-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
-            <p class="text-gray-600">Welcome to your dashboard! Here you can view your document requests and their statuses.</p>
-        </div>
-    </section>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: REQUEST POOL -->
-    <!-- ============================================================ -->
-    <div id="modal-pool-overlay"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden px-4">
-
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
-
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 class="text-base font-black text-gray-800 tracking-tight">Request Details</h2>
-                <button onclick="closePoolModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
-            </div>
-
-            <div class="px-6 py-5 space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">ID</span>
-                    <span id="pool-modal-id" class="text-sm font-bold text-gray-500"></span>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Document Type</span>
-                    <span id="pool-modal-doctype" class="text-sm font-bold text-gray-700"></span>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Full Name</span>
-                    <div class="flex items-center gap-2">
-                        <div id="pool-modal-avatar" class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0"></div>
-                        <span id="pool-modal-name" class="text-sm font-bold text-gray-700"></span>
-                    </div>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Requested At</span>
-                    <span id="pool-modal-date" class="text-sm text-gray-500"></span>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-                <button onclick="closePoolModal()"
-                    class="text-sm font-bold text-gray-500 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all active:scale-95">
-                    Close
-                </button>
-                <button class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg transition-all active:scale-95">
-                    Accept
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- MODAL: MY REQUESTS -->
-    <!-- ============================================================ -->
-    <div id="modal-requests-overlay"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden px-4">
-
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
-
-            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h2 class="text-base font-black text-gray-800 tracking-tight">Request Details</h2>
-                <button onclick="closeRequestsModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
-            </div>
-
-            <div class="px-6 py-5 space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">ID</span>
-                    <span id="req-modal-id" class="text-sm font-bold text-gray-500"></span>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Document Type</span>
-                    <span id="req-modal-doctype" class="text-sm font-bold text-gray-700"></span>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Full Name</span>
-                    <div class="flex items-center gap-2">
-                        <div id="req-modal-avatar" class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0"></div>
-                        <span id="req-modal-name" class="text-sm font-bold text-gray-700"></span>
-                    </div>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Requested At</span>
-                    <span id="req-modal-date" class="text-sm text-gray-500"></span>
-                </div>
-                <hr class="border-gray-100">
-                <div class="flex justify-between items-center">
-                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Payment Status</span>
-                    <span id="req-modal-payment-status"></span>
-                </div>
-
-                <!-- Payment Details: only visible when Paid -->
-                <div id="req-modal-payment-details" class="hidden space-y-4">
-                    <hr class="border-gray-100">
-                    <div class="bg-gray-50 rounded-xl px-4 py-4 space-y-3">
-                        <p class="text-xs font-black text-gray-400 uppercase tracking-widest mb-1">Payment Info</p>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-500 font-bold">Payment ID</span>
-                            <span id="req-modal-payment-id" class="text-sm font-bold text-gray-700"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-500 font-bold">Amount</span>
-                            <span id="req-modal-amount" class="text-sm font-black text-green-600"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-500 font-bold">Paid At</span>
-                            <span id="req-modal-paid-at" class="text-sm text-gray-500"></span>
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-xs text-gray-500 font-bold">Reference No.</span>
-                            <span id="req-modal-reference" class="text-sm font-mono font-bold text-gray-700"></span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-                <button onclick="closeRequestsModal()"
-                    class="text-sm font-bold text-gray-500 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all active:scale-95">
-                    Close
-                </button>
-                <button class="text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 px-5 py-2 rounded-lg transition-all active:scale-95">
-                    Validate
-                </button>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- ============================================================ -->
-    <!-- SCRIPT: MODALS -->
-    <!-- ============================================================ -->
-    <script>
-
-        // --- REQUEST POOL MODAL ---
-        function openPoolModal(id, docType, name, initials, date) {
-            document.getElementById('pool-modal-id').textContent = '#' + id;
-            document.getElementById('pool-modal-doctype').textContent = docType;
-            document.getElementById('pool-modal-name').textContent = name;
-            document.getElementById('pool-modal-avatar').textContent = initials;
-            document.getElementById('pool-modal-date').textContent = date;
-            document.getElementById('modal-pool-overlay').classList.remove('hidden');
-        }
-
-        function closePoolModal() {
-            document.getElementById('modal-pool-overlay').classList.add('hidden');
-        }
-
-        document.getElementById('modal-pool-overlay').addEventListener('click', function(e) {
-            if (e.target === this) closePoolModal();
-        });
-
-        // --- MY REQUESTS MODAL ---
-        function openRequestsModal(id, docType, name, initials, date, paymentStatus, paymentId, amount, paidAt, referenceNumber) {
-            document.getElementById('req-modal-id').textContent = '#' + id;
-            document.getElementById('req-modal-doctype').textContent = docType;
-            document.getElementById('req-modal-name').textContent = name;
-            document.getElementById('req-modal-avatar').textContent = initials;
-            document.getElementById('req-modal-date').textContent = date;
-
-            const statusEl = document.getElementById('req-modal-payment-status');
-            const detailsEl = document.getElementById('req-modal-payment-details');
-
-            if (paymentStatus === 'paid') {
-                statusEl.innerHTML = '<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>';
-                detailsEl.classList.remove('hidden');
-                document.getElementById('req-modal-payment-id').textContent = paymentId;
-                document.getElementById('req-modal-amount').textContent = amount;
-                document.getElementById('req-modal-paid-at').textContent = paidAt;
-                document.getElementById('req-modal-reference').textContent = referenceNumber;
-            } else {
-                statusEl.innerHTML = '<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>';
-                detailsEl.classList.add('hidden');
-            }
-
-            document.getElementById('modal-requests-overlay').classList.remove('hidden');
-        }
-
-        function closeRequestsModal() {
-            document.getElementById('modal-requests-overlay').classList.add('hidden');
-        }
-
-        document.getElementById('modal-requests-overlay').addEventListener('click', function(e) {
-            if (e.target === this) closeRequestsModal();
-        });
-
-    </script>
-
-    <!-- ============================================================ -->
-    <!-- SCRIPT: NAV, AUTH, LOGOUT -->
-    <!-- ============================================================ -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-
-            const firstNameEl = document.getElementById("navbar-firstname");
-            const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
-            const logoutBtn = document.getElementById("logout-btn");
-            const logoutBtnMobile = document.getElementById("logout-btn-mobile");
-            const hamburgerBtn = document.getElementById("hamburger-btn");
-            const mobileMenu = document.getElementById("mobile-menu");
-            const cancelBtn = document.getElementById("cancel-btn");
-
-            const sections = ['dashboard', 'request-pool', 'my-requests'];
-
-            const getFirstName = () => {
-                const email = sessionStorage.getItem("email") ?? "";
-                return email.split("@")[0] ?? "Student";
-            };
-
-            const logout = () => {
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.href = "index.html";
-            };
-
-            const navigateTo = (targetId) => {
-                sections.forEach(id => {
-                    const section = document.getElementById(id);
-                    if (section) {
-                        section.classList.toggle('hidden', id !== targetId);
-                    }
-                });
-
-                document.querySelectorAll('.nav-link').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
-                    } else {
-                        navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
-                    }
-                });
-
-                document.querySelectorAll('.nav-link-mobile').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
-                    } else {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
-                    }
-                });
-            };
-
-            const firstName = getFirstName();
-            if (firstNameEl) firstNameEl.textContent = firstName;
-            if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
-
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navigateTo(link.getAttribute('href').substring(1));
-                });
-            });
-
-            document.querySelectorAll('.nav-link-mobile').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navigateTo(link.getAttribute('href').substring(1));
-                    mobileMenu.classList.remove('open');
-                });
-            });
-
-            if (logoutBtn) logoutBtn.addEventListener("click", logout);
-            if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
-
-            if (cancelBtn) cancelBtn.addEventListener("click", () => navigateTo('dashboard'));
-
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener("click", () => {
-                    mobileMenu.classList.toggle("open");
-                });
-            }
-
-            navigateTo('dashboard');
-
-            window.addEventListener("navigateTo", (e) => {
-                navigateTo(e.detail.section);
-            });
-
-        });
-    </script>
+    <script type="module" src="js/registrarDashBoard.js"></script>
 
 </body>
 </html>

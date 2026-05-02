@@ -36,3 +36,20 @@ export function submitDocumentRequest(token, payload) {
     })
   );
 }
+
+export function getPendingRequests(token) {
+  return apiRequest(
+    `/api/document-request/pending`,
+    withAuth(token, { method: "GET" })
+  );
+}
+
+export function acceptDocumentRequest(token, payload) {
+  return apiRequest(
+    `/api/document-request/accept`,
+    withAuth(token, { 
+      method: "PUT", 
+      body: JSON.stringify(payload),
+    })
+  );
+}
