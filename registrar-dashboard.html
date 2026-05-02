@@ -115,9 +115,9 @@
                             <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-48">Action</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody id="document-table-body" class="divide-y divide-gray-100">
 
-                        <tr class="hover:bg-gray-50 transition-colors">
+                        <!-- <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-001</td>
                             <td class="px-5 py-4 font-bold text-gray-700">Transcript of Records</td>
                             <td class="px-5 py-4">
@@ -134,7 +134,7 @@
                                         class="text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">View</button>
                                 </div>
                             </td>
-                        </tr>
+                        </tr> -->
 
                     </tbody>
                 </table>
@@ -240,7 +240,7 @@
 
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <h2 class="text-base font-black text-gray-800 tracking-tight">Request Details</h2>
-                <button onclick="closePoolModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
+                <button onclick="window.closePoolModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
             </div>
 
             <div class="px-6 py-5 space-y-4">
@@ -269,11 +269,11 @@
             </div>
 
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-                <button onclick="closePoolModal()"
+                <button onclick="window.closePoolModal()"
                     class="text-sm font-bold text-gray-500 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all active:scale-95">
                     Close
                 </button>
-                <button class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg transition-all active:scale-95">
+                <button id="pool-modal-accept-btn" class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg transition-all active:scale-95">
                     Accept
                 </button>
             </div>
@@ -291,7 +291,7 @@
 
             <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <h2 class="text-base font-black text-gray-800 tracking-tight">Request Details</h2>
-                <button onclick="closeRequestsModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
+                <button onclick="window.closeRequestsModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
             </div>
 
             <div class="px-6 py-5 space-y-4">
@@ -349,7 +349,7 @@
             </div>
 
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
-                <button onclick="closeRequestsModal()"
+                <button onclick="window.closeRequestsModal()"
                     class="text-sm font-bold text-gray-500 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all active:scale-95">
                     Close
                 </button>
@@ -361,157 +361,8 @@
         </div>
     </div>
 
-    <!-- ============================================================ -->
-    <!-- SCRIPT: MODALS -->
-    <!-- ============================================================ -->
-    <script>
 
-        // --- REQUEST POOL MODAL ---
-        function openPoolModal(id, docType, name, initials, date) {
-            document.getElementById('pool-modal-id').textContent = '#' + id;
-            document.getElementById('pool-modal-doctype').textContent = docType;
-            document.getElementById('pool-modal-name').textContent = name;
-            document.getElementById('pool-modal-avatar').textContent = initials;
-            document.getElementById('pool-modal-date').textContent = date;
-            document.getElementById('modal-pool-overlay').classList.remove('hidden');
-        }
-
-        function closePoolModal() {
-            document.getElementById('modal-pool-overlay').classList.add('hidden');
-        }
-
-        document.getElementById('modal-pool-overlay').addEventListener('click', function(e) {
-            if (e.target === this) closePoolModal();
-        });
-
-        // --- MY REQUESTS MODAL ---
-        function openRequestsModal(id, docType, name, initials, date, paymentStatus, paymentId, amount, paidAt, referenceNumber) {
-            document.getElementById('req-modal-id').textContent = '#' + id;
-            document.getElementById('req-modal-doctype').textContent = docType;
-            document.getElementById('req-modal-name').textContent = name;
-            document.getElementById('req-modal-avatar').textContent = initials;
-            document.getElementById('req-modal-date').textContent = date;
-
-            const statusEl = document.getElementById('req-modal-payment-status');
-            const detailsEl = document.getElementById('req-modal-payment-details');
-
-            if (paymentStatus === 'paid') {
-                statusEl.innerHTML = '<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>';
-                detailsEl.classList.remove('hidden');
-                document.getElementById('req-modal-payment-id').textContent = paymentId;
-                document.getElementById('req-modal-amount').textContent = amount;
-                document.getElementById('req-modal-paid-at').textContent = paidAt;
-                document.getElementById('req-modal-reference').textContent = referenceNumber;
-            } else {
-                statusEl.innerHTML = '<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>';
-                detailsEl.classList.add('hidden');
-            }
-
-            document.getElementById('modal-requests-overlay').classList.remove('hidden');
-        }
-
-        function closeRequestsModal() {
-            document.getElementById('modal-requests-overlay').classList.add('hidden');
-        }
-
-        document.getElementById('modal-requests-overlay').addEventListener('click', function(e) {
-            if (e.target === this) closeRequestsModal();
-        });
-
-    </script>
-
-    <!-- ============================================================ -->
-    <!-- SCRIPT: NAV, AUTH, LOGOUT -->
-    <!-- ============================================================ -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-
-            const firstNameEl = document.getElementById("navbar-firstname");
-            const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
-            const logoutBtn = document.getElementById("logout-btn");
-            const logoutBtnMobile = document.getElementById("logout-btn-mobile");
-            const hamburgerBtn = document.getElementById("hamburger-btn");
-            const mobileMenu = document.getElementById("mobile-menu");
-            const cancelBtn = document.getElementById("cancel-btn");
-
-            const sections = ['dashboard', 'request-pool', 'my-requests'];
-
-            const getFirstName = () => {
-                const email = sessionStorage.getItem("email") ?? "";
-                return email.split("@")[0] ?? "Student";
-            };
-
-            const logout = () => {
-                sessionStorage.clear();
-                localStorage.clear();
-                window.location.href = "index.html";
-            };
-
-            const navigateTo = (targetId) => {
-                sections.forEach(id => {
-                    const section = document.getElementById(id);
-                    if (section) {
-                        section.classList.toggle('hidden', id !== targetId);
-                    }
-                });
-
-                document.querySelectorAll('.nav-link').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
-                    } else {
-                        navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
-                    }
-                });
-
-                document.querySelectorAll('.nav-link-mobile').forEach(navLink => {
-                    const linkTarget = navLink.getAttribute('href').substring(1);
-                    if (linkTarget === targetId) {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
-                    } else {
-                        navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
-                    }
-                });
-            };
-
-            const firstName = getFirstName();
-            if (firstNameEl) firstNameEl.textContent = firstName;
-            if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
-
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navigateTo(link.getAttribute('href').substring(1));
-                });
-            });
-
-            document.querySelectorAll('.nav-link-mobile').forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    navigateTo(link.getAttribute('href').substring(1));
-                    mobileMenu.classList.remove('open');
-                });
-            });
-
-            if (logoutBtn) logoutBtn.addEventListener("click", logout);
-            if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
-
-            if (cancelBtn) cancelBtn.addEventListener("click", () => navigateTo('dashboard'));
-
-            if (hamburgerBtn) {
-                hamburgerBtn.addEventListener("click", () => {
-                    mobileMenu.classList.toggle("open");
-                });
-            }
-
-            navigateTo('dashboard');
-
-            window.addEventListener("navigateTo", (e) => {
-                navigateTo(e.detail.section);
-            });
-
-        });
-    </script>
+    <script type="module" src="js/registrarDashBoard.js?nocache=1"></script>
 
 </body>
 </html>
