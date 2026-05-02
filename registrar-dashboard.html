@@ -5,105 +5,163 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTC eRequest | Registrar Dashboard</title>
 
+    <!-- ============================================================ -->
     <!-- FONTS -->
+    <!-- ============================================================ -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
+    <!-- ============================================================ -->
     <!-- DEPENDENCIES -->
+    <!-- ============================================================ -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Assuming auth-guard.js is in the same directory -->
-    <script src="auth-guard.js"></script>
+    <script src="auth-guard.js" defer></script>
 
+    <!-- ============================================================ -->
     <!-- TAILWIND CONFIG -->
+    <!-- ============================================================ -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     fontFamily: {
                         sans: ['Lato', 'ui-sans-serif', 'system-ui'],
-                    },
-                    colors: {
-                        'ntc-red': '#800000', // Example NTC Maroon
-                        'ntc-gold': '#FFD700',
                     }
                 }
             }
         }
     </script>
+
+    <!-- ============================================================ -->
+    <!-- STYLES -->
+    <!-- ============================================================ -->
+    <style>
+        #mobile-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+        #mobile-menu.open {
+            max-height: 400px;
+            opacity: 1;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 999px;
+        }
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-PENDING    { background: #fef9c3; color: #854d0e; }
+        .status-PENDING .status-dot  { background: #ca8a04; }
+        .status-IN_REVIEW  { background: #dbeafe; color: #1e40af; }
+        .status-IN_REVIEW .status-dot { background: #3b82f6; }
+        .status-APPROVED   { background: #dcfce7; color: #166534; }
+        .status-APPROVED .status-dot { background: #16a34a; }
+        .status-REJECTED   { background: #fee2e2; color: #991b1b; }
+        .status-REJECTED .status-dot { background: #dc2626; }
+    </style>
+
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="bg-slate-50 min-h-screen font-sans">
 
-    <div class="flex h-screen overflow-hidden">
+    <!-- ============================================================ -->
+    <!-- NAVBAR -->
+    <!-- ============================================================ -->
+    <nav class="bg-white border-b border-gray-200 shadow-sm px-4 py-3">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
 
-        <!-- SIDEBAR -->
-        <aside class="hidden md:flex flex-col w-64 bg-ntc-red text-white">
-            <div class="p-6 text-center border-b border-red-900">
-                <h1 class="text-2xl font-black tracking-tight">NTC <span class="text-ntc-gold">eRequest</span></h1>
-                <p class="text-xs opacity-75 uppercase mt-1">Registrar Portal</p>
+            <!-- Logo -->
+            <div class="flex items-center gap-2">
+                <div class="bg-blue-600 text-white font-black text-sm px-2.5 py-1.5 rounded-lg tracking-tight">NTC</div>
+                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight hidden sm:block">National Teachers College</span>
+                <span class="text-blue-900 font-black text-base tracking-tight sm:hidden">NTC</span>
             </div>
-            
-            <nav class="flex-1 px-4 py-6 space-y-2">
-                <a href="#" class="flex items-center space-x-3 bg-white bg-opacity-10 px-4 py-3 rounded-lg font-bold">
-                    <span>Dashboard</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
-                    <span>Pending Requests</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
-                    <span>Document Archive</span>
-                </a>
-                <a href="#" class="flex items-center space-x-3 hover:bg-white hover:bg-opacity-5 px-4 py-3 rounded-lg transition">
-                    <span>Reports</span>
-                </a>
-            </nav>
 
-            <div class="p-4 border-t border-red-900">
-                <button onclick="logout()" class="w-full text-left px-4 py-2 text-sm hover:text-ntc-gold transition">
+            <!-- Desktop Nav Links -->
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#overview"      class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Overview</a>
+                <a href="#all-requests"  class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">All Requests</a>
+            </div>
+
+            <!-- Right: Name + Logout + Hamburger -->
+            <div class="flex items-center gap-3">
+                <span class="text-sm text-gray-600 hidden sm:block">
+                    Hi, <span id="navbar-name" class="font-bold text-blue-900">Registrar</span>
+                </span>
+                <button id="logout-btn"
+                    class="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors active:scale-[0.98]">
+                    Logout
+                </button>
+                <button id="hamburger-btn" class="md:hidden flex flex-col gap-1.5 p-1" aria-label="Toggle navigation menu">
+                    <span class="block w-5 h-0.5 bg-gray-700"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700"></span>
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="md:hidden border-t border-gray-100">
+            <div class="flex flex-col gap-1 pt-3 pb-2">
+                <span class="text-sm text-gray-600 px-2 py-1.5">
+                    Hi, <span class="font-bold text-blue-900">Registrar</span>
+                </span>
+                <a href="#overview"     class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Overview</a>
+                <a href="#all-requests" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">All Requests</a>
+                <button id="logout-btn-mobile"
+                    class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mt-1 active:scale-[0.98]">
                     Logout
                 </button>
             </div>
-        </aside>
+        </div>
+    </nav>
 
-        <!-- MAIN CONTENT AREA -->
-        <div class="flex-1 flex flex-col overflow-y-auto">
-            
-            <!-- HEADER / TOP NAV -->
-            <header class="bg-white shadow-sm px-8 py-4 flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-800">Overview</h2>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-600">Welcome, <strong>Registrar Admin</strong></span>
-                    <div class="h-10 w-10 rounded-full bg-gray-200 border border-gray-300"></div>
+    <!-- ============================================================ -->
+    <!-- SECTION: OVERVIEW -->
+    <!-- ============================================================ -->
+    <section id="overview" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Overview</h2>
+
+            <!-- Stat Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">New Requests</p>
+                    <h3 id="stat-pending" class="text-3xl font-black text-blue-600">—</h3>
                 </div>
-            </header>
-
-            <!-- DASHBOARD CONTENT -->
-            <main class="p-8">
-                
-                <!-- STAT CARDS -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-sm text-gray-500 font-bold uppercase">New Requests</p>
-                        <h3 class="text-3xl font-black text-ntc-red">24</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-sm text-gray-500 font-bold uppercase">Processing</p>
-                        <h3 class="text-3xl font-black text-blue-600">12</h3>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                        <p class="text-sm text-gray-500 font-bold uppercase">Completed Today</p>
-                        <h3 class="text-3xl font-black text-green-600">45</h3>
-                    </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">In Review</p>
+                    <h3 id="stat-review" class="text-3xl font-black text-yellow-500">—</h3>
                 </div>
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Approved</p>
+                    <h3 id="stat-approved" class="text-3xl font-black text-green-600">—</h3>
+                </div>
+            </div>
 
-                <!-- REQUESTS TABLE -->
-                <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800">Recent Document Requests</h3>
-                        <button class="text-sm text-ntc-red font-bold hover:underline">View All</button>
-                    </div>
-                    <table class="w-full text-left">
-                        <thead class="bg-gray-50 text-xs uppercase text-gray-500 font-bold">
+            <!-- Recent Requests Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="font-bold text-gray-800">Recent Document Requests</h3>
+                    <button id="view-all-btn" class="text-sm text-blue-600 font-bold hover:underline">View All</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-400 font-bold">
                             <tr>
                                 <th class="px-6 py-4">Student Name</th>
                                 <th class="px-6 py-4">Document Type</th>
@@ -112,41 +170,280 @@
                                 <th class="px-6 py-4 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 text-sm">
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">Dela Cruz, Juan</td>
-                                <td class="px-6 py-4 text-gray-600">Official Transcript of Records</td>
-                                <td class="px-6 py-4 text-gray-600">Oct 24, 2023</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Pending</span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-ntc-red font-bold hover:text-red-800">Process</button>
-                                </td>
-                            </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 font-medium text-gray-900">Santos, Maria</td>
-                                <td class="px-6 py-4 text-gray-600">Certificate of Enrollment</td>
-                                <td class="px-6 py-4 text-gray-600">Oct 23, 2023</td>
-                                <td class="px-6 py-4">
-                                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-700">In Review</span>
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    <button class="text-ntc-red font-bold hover:text-red-800">Process</button>
-                                </td>
+                        <tbody id="recent-requests-body" class="divide-y divide-gray-100 text-sm text-gray-700">
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400">Loading requests...</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
 
-            </main>
         </div>
-    </div>
+    </section>
 
-    <!-- AUTH GUARD -->
+    <!-- ============================================================ -->
+    <!-- SECTION: ALL REQUESTS -->
+    <!-- ============================================================ -->
+    <section id="all-requests" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">All Requests</h2>
+
+            <!-- Filter Bar -->
+            <div class="flex flex-wrap gap-3 mb-6">
+                <select id="filter-status"
+                    class="p-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING">Pending</option>
+                    <option value="IN_REVIEW">In Review</option>
+                    <option value="APPROVED">Approved</option>
+                    <option value="REJECTED">Rejected</option>
+                </select>
+            </div>
+
+            <!-- Full Requests Table -->
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-xs uppercase text-gray-400 font-bold">
+                            <tr>
+                                <th class="px-6 py-4">Student Name</th>
+                                <th class="px-6 py-4">Document Type</th>
+                                <th class="px-6 py-4">Date Requested</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="all-requests-body" class="divide-y divide-gray-100 text-sm text-gray-700">
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-center text-gray-400">Loading requests...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================================ -->
     <script>
-        // requirement: user must be logged in as REGISTRAR
-        requireRole(["REGISTRAR"]);
+        document.addEventListener("DOMContentLoaded", () => {
+
+            // ============================================================
+            // AUTH GUARD
+            // ============================================================
+            requireRole(["REGISTRAR", "ADMIN"]);
+
+            // ============================================================
+            // ELEMENT REFERENCES
+            // ============================================================
+            const logoutBtn        = document.getElementById("logout-btn");
+            const logoutBtnMobile  = document.getElementById("logout-btn-mobile");
+            const hamburgerBtn     = document.getElementById("hamburger-btn");
+            const mobileMenu       = document.getElementById("mobile-menu");
+            const navbarName       = document.getElementById("navbar-name");
+            const viewAllBtn       = document.getElementById("view-all-btn");
+            const filterStatus     = document.getElementById("filter-status");
+
+            const sections = ["overview", "all-requests"];
+
+            // ============================================================
+            // HELPERS
+            // ============================================================
+            const formatLabel = (type) =>
+                String(type || "")
+                    .replace(/_/g, " ")
+                    .toLowerCase()
+                    .replace(/\b\w/g, (c) => c.toUpperCase());
+
+            const getName = () => {
+                const email = sessionStorage.getItem("email") ?? "";
+                return email.split("@")[0] || "Registrar";
+            };
+
+            const logout = () => {
+                sessionStorage.clear();
+                localStorage.clear();
+                window.location.href = "index.html";
+            };
+
+            const buildStatusBadge = (status) =>
+                `<span class="status-badge status-${status}"><span class="status-dot"></span>${formatLabel(status)}</span>`;
+
+            const buildRow = (req, includeDataAttr = false) => `
+                <tr class="hover:bg-gray-50 transition-colors" ${includeDataAttr ? `data-status="${req.status}"` : ""}>
+                    <td class="px-6 py-4 font-medium text-gray-900">${req.studentFullName ?? "—"}</td>
+                    <td class="px-6 py-4 text-gray-600">${formatLabel(req.documentType)}</td>
+                    <td class="px-6 py-4 text-gray-500">${new Date(req.requestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</td>
+                    <td class="px-6 py-4">${buildStatusBadge(req.status)}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button class="text-blue-600 font-bold hover:text-blue-800 transition-colors text-sm"
+                            onclick="openProcess('${req.id}')">Process</button>
+                    </td>
+                </tr>`;
+
+            // ============================================================
+            // SPA NAVIGATION
+            // ============================================================
+            const navigateTo = (targetId) => {
+                sections.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.toggle("hidden", id !== targetId);
+                });
+
+                document.querySelectorAll(".nav-link").forEach(link => {
+                    const t = link.getAttribute("href").substring(1);
+                    link.className = t === targetId
+                        ? "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5"
+                        : "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
+                });
+
+                document.querySelectorAll(".nav-link-mobile").forEach(link => {
+                    const t = link.getAttribute("href").substring(1);
+                    link.className = t === targetId
+                        ? "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg"
+                        : "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
+                });
+            };
+
+            window.navigateTo = navigateTo;
+
+            // Desktop nav clicks
+            document.querySelectorAll(".nav-link").forEach(link => {
+                link.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    navigateTo(link.getAttribute("href").substring(1));
+                });
+            });
+
+            // Mobile nav clicks
+            document.querySelectorAll(".nav-link-mobile").forEach(link => {
+                link.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    navigateTo(link.getAttribute("href").substring(1));
+                    mobileMenu.classList.remove("open");
+                });
+            });
+
+            // View All button
+            if (viewAllBtn) viewAllBtn.addEventListener("click", () => navigateTo("all-requests"));
+
+            // ============================================================
+            // NAVBAR NAME
+            // ============================================================
+            if (navbarName) navbarName.textContent = getName();
+
+            // ============================================================
+            // LOGOUT
+            // ============================================================
+            if (logoutBtn)       logoutBtn.addEventListener("click", logout);
+            if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
+
+            // ============================================================
+            // HAMBURGER
+            // ============================================================
+            if (hamburgerBtn) {
+                hamburgerBtn.addEventListener("click", () => {
+                    mobileMenu.classList.toggle("open");
+                });
+            }
+
+            // ============================================================
+            // STATUS FILTER
+            // ============================================================
+            if (filterStatus) {
+                filterStatus.addEventListener("change", (e) => {
+                    const val = e.target.value;
+                    document.querySelectorAll("#all-requests-body tr[data-status]").forEach(row => {
+                        row.style.display = (!val || row.dataset.status === val) ? "" : "none";
+                    });
+                });
+            }
+
+            // ============================================================
+            // PROCESS PLACEHOLDER
+            // ============================================================
+            window.openProcess = (requestId) => {
+                // TODO: Replace with your process modal / panel
+                alert(`Process request ID: ${requestId}`);
+            };
+
+            // ============================================================
+            // LOAD DATA (wire up your API calls here)
+            // ============================================================
+
+            /**
+             * Populate stat cards and recent requests table.
+             * Replace the placeholder data below with real API calls.
+             */
+            const loadOverview = (requests) => {
+                // Stat counts
+                document.getElementById("stat-pending").textContent  =
+                    requests.filter(r => r.status === "PENDING").length;
+                document.getElementById("stat-review").textContent   =
+                    requests.filter(r => r.status === "IN_REVIEW").length;
+                document.getElementById("stat-approved").textContent =
+                    requests.filter(r => r.status === "APPROVED").length;
+
+                // Recent 5
+                const body = document.getElementById("recent-requests-body");
+                const recent = requests.slice(0, 5);
+                body.innerHTML = recent.length
+                    ? recent.map(r => buildRow(r)).join("")
+                    : `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No requests found.</td></tr>`;
+            };
+
+            const loadAllRequests = (requests) => {
+                const body = document.getElementById("all-requests-body");
+                body.innerHTML = requests.length
+                    ? requests.map(r => buildRow(r, true)).join("")
+                    : `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">No requests found.</td></tr>`;
+            };
+
+            /**
+             * Example fetch — replace URL and token retrieval as needed.
+             * The functions loadOverview() and loadAllRequests() accept
+             * an array of request objects and handle rendering.
+             */
+            const fetchRequests = async () => {
+                try {
+                    const token = sessionStorage.getItem("ntc_access_token");
+                    const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
+
+                    const res = await fetch(`${BASE_URL}/api/document-request/all`, {
+                        method: "GET",
+                        headers: {
+                            "Accept": "application/json",
+                            "Authorization": `Bearer ${token}`,
+                        },
+                    });
+
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+                    const requests = await res.json();
+                    loadOverview(requests);
+                    loadAllRequests(requests);
+
+                } catch (err) {
+                    console.error("Failed to load requests:", err.message);
+                    const empty = `<tr><td colspan="5" class="px-6 py-8 text-center text-gray-400">Failed to load requests.</td></tr>`;
+                    document.getElementById("recent-requests-body").innerHTML = empty;
+                    document.getElementById("all-requests-body").innerHTML   = empty;
+                }
+            };
+
+            fetchRequests();
+
+            // ============================================================
+            // DEFAULT VIEW
+            // ============================================================
+            navigateTo("overview");
+
+        });
     </script>
 
 </body>
