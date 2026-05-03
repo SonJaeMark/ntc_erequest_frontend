@@ -448,8 +448,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.log("Student:", req.studentFullName);
     console.log("Payment reference:", req.payment?.referenceNumber);
     console.log("Amount:", req.payment?.amount);
-    console.log("=== END DEBUG ===
-");
+    console.log("=== END DEBUG ===");
 
     if (paymentId)   paymentId.value          = req.payment?.id ?? req.id;
     if (studentName) studentName.textContent  = req.studentFullName ?? "—";
@@ -514,8 +513,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const value = sessionStorage.getItem(key);
         console.log(`  ${key}:`, value?.substring ? value.substring(0, 40) + "..." : value);
       }
-      console.log("=== END DEBUG ===
-");
+      console.log("=== END DEBUG ===");
 
       if (!token) {
         throw new Error("No auth token found. Please log in again.");
