@@ -18,13 +18,62 @@ document.addEventListener("DOMContentLoaded", async () => {
   const hamburgerBtn = document.getElementById("hamburger-btn");
   const mobileMenu = document.getElementById("mobile-menu");
   const cancelBtn = document.getElementById("cancel-btn");
+  const paymentModal = document.getElementById("payment-modal");
+  const paymentModalTitle = document.getElementById("payment-modal-title");
+  const paymentRequestId = document.getElementById("payment-request-id");
+  const paymentModalClose = document.getElementById("payment-modal-close");
+  const paymentMethodSelect = document.getElementById("payment-method");
+  const paymentConfirmBtn = document.getElementById("payment-confirm-btn");
 
   const sections = ['dashboard', 'request-document', 'my-requests'];
+  let activePaymentRequest = null;
+  let lastPaymentTrigger = null;
 
   // --- Helpers ---
+  /**
+   * Returns the student's first name.
+   * Prefers the 'firstName' key stored at login; falls back to email prefix.
+   */
   const getFirstName = () => {
+      const stored = sessionStorage.getItem("firstName");
+      if (stored && stored.trim()) return stored.trim();
       const email = sessionStorage.getItem("email") ?? "";
-      return email.split("@")[0] ?? "Student";
+      return email.split("@")[0] || "Student";
+  };
+
+  const openPaymentModal = (request, triggerButton) => {
+      if (!paymentModal) return;
+
+      activePaymentRequest = {
+          id: request.id,
+          documentType: request.documentType,
+          paymentMethod: "",
+      };
+      lastPaymentTrigger = triggerButton;
+
+      if (paymentModalTitle) paymentModalTitle.textContent = `${formatLabel(request.documentType)} Payment`;
+      if (paymentRequestId) paymentRequestId.textContent = `Request ID: ${request.id}`;
+      if (paymentMethodSelect) paymentMethodSelect.value = "";
+      if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
+
+      paymentModal.classList.remove("hidden");
+      document.body.classList.add("overflow-hidden");
+      paymentMethodSelect?.focus();
+  };
+
+  const closePaymentModal = () => {
+      if (!paymentModal) return;
+
+      paymentModal.classList.add("hidden");
+      document.body.classList.remove("overflow-hidden");
+      activePaymentRequest = null;
+      if (paymentMethodSelect) paymentMethodSelect.value = "";
+      if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
+
+      if (lastPaymentTrigger) {
+          lastPaymentTrigger.focus();
+          lastPaymentTrigger = null;
+      }
   };
 
   const logout = async () => {
@@ -62,8 +111,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           const linkTarget = navLink.getAttribute('href').substring(1);
           if (linkTarget === targetId) {
               navLink.className = "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5";
+              navLink.setAttribute('aria-current', 'page');
           } else {
               navLink.className = "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
+              navLink.removeAttribute('aria-current');
           }
       });
 
@@ -72,8 +123,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           const linkTarget = navLink.getAttribute('href').substring(1);
           if (linkTarget === targetId) {
               navLink.className = "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg";
+              navLink.setAttribute('aria-current', 'page');
           } else {
               navLink.className = "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
+              navLink.removeAttribute('aria-current');
           }
       });
   };
@@ -82,6 +135,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const firstName = getFirstName();
   if (firstNameEl) firstNameEl.textContent = firstName;
   if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
+  const dashboardFirstNameEl = document.getElementById("dashboard-firstname");
+  if (dashboardFirstNameEl) dashboardFirstNameEl.textContent = firstName;
 
   // --- Desktop nav link clicks ---
   document.querySelectorAll('.nav-link').forEach(link => {
@@ -119,6 +174,40 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
   }
 
+  if (paymentModalClose) paymentModalClose.addEventListener("click", closePaymentModal);
+
+  if (paymentModal) {
+      paymentModal.addEventListener("click", (event) => {
+          if (event.target === paymentModal) {
+              closePaymentModal();
+          }
+      });
+  }
+
+  document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && paymentModal && !paymentModal.classList.contains("hidden")) {
+          closePaymentModal();
+      }
+  });
+
+  if (paymentConfirmBtn) {
+      paymentConfirmBtn.addEventListener("click", () => {
+          if (!activePaymentRequest || !activePaymentRequest.paymentMethod) return;
+          console.log("Payment method handler placeholder:", activePaymentRequest);
+      });
+  }
+
+  if (paymentMethodSelect) {
+      paymentMethodSelect.addEventListener("change", () => {
+          if (!activePaymentRequest) return;
+
+          activePaymentRequest.paymentMethod = paymentMethodSelect.value;
+          if (paymentConfirmBtn) {
+              paymentConfirmBtn.disabled = !paymentMethodSelect.value;
+          }
+      });
+  }
+
   // --- Show dashboard section by default on load ---
   navigateTo('dashboard');
 
@@ -153,10 +242,33 @@ document.addEventListener("DOMContentLoaded", async () => {
    * e.g. CERTIFICATE_OF_ENROLLMENT -> Certificate Of Enrollment
    */
   const formatLabel = (type) =>
-    type
+    String(type ?? "")
       .replace(/_/g, " ")
       .toLowerCase()
       .replace(/\b\w/g, (c) => c.toUpperCase());
+
+  const formatDate = (dateValue) => {
+    const date = new Date(dateValue);
+    return Number.isNaN(date.getTime()) ? "No date available" : date.toLocaleDateString();
+  };
+
+  const formatDateTime = (dateValue) => {
+    const date = new Date(dateValue);
+    return Number.isNaN(date.getTime()) ? "No date available" : date.toLocaleString();
+  };
+
+  const createMessage = (text, className) => {
+    const message = document.createElement("p");
+    message.className = className;
+    message.textContent = text;
+    return message;
+  };
+
+  const canPayRequest = (status) =>
+    ["PENDING", "PROCESSING"].includes(String(status ?? "").toUpperCase());
+
+  const canCancelRequest = (status) =>
+    String(status ?? "").toUpperCase() === "PENDING";
 
   // ============================================================
   // LOAD DOCUMENT TYPES
@@ -168,15 +280,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loadDocumentTypes = async () => {
     try {
       const token = getAuthToken();
-
-      console.log("=== LOAD DOCUMENTS DEBUG ===");
-      console.log("Token exists:", !!token);
-      console.log("Token length:", token?.length || 0);
-      if (token) {
-        console.log("Token value (FULL):", token);
-      }
-      console.log("SessionStorage entries:", sessionStorage.length);
-      console.log("=== END DEBUG ===\n");
 
       if (!token) {
         console.error("No auth token found");
@@ -242,69 +345,140 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      // --- Status badge color map ---
+      const statusStyles = {
+        PENDING:    'bg-yellow-100 text-yellow-700',
+        PROCESSING: 'bg-blue-100 text-blue-700',
+        COMPLETED:  'bg-green-100 text-green-700',
+        Completed:  'bg-green-100 text-green-700',
+        REJECTED:   'bg-red-100 text-red-700',
+        CANCELLED:  'bg-gray-100 text-gray-700',
+      };
+      const getStatusStyle = (status) =>
+        statusStyles[status] ?? 'bg-gray-100 text-gray-700';
+
       // --- Step 1: Fetch all requests ---
       const requests = await getStudentRequests(token);
       const container = document.getElementById("document-requests-container");
 
-      // --- Step 2: Console log all requests ---
-      console.log("=== STUDENT DOCUMENT REQUESTS ===");
-      console.log("Total requests:", requests.length);
-      console.log("Requests:", requests);
-      requests.forEach((req, idx) => {
-        console.log(`  [${idx}] ID: ${req.id}, Type: ${req.documentType}, Status: ${req.status}, Date: ${req.requestedAt}`);
-      });
-      console.log("=== END REQUESTS ===\n");
+      if (!Array.isArray(requests)) {
+        console.error("Unexpected response format for requests:", requests);
+        if (container) {
+          container.replaceChildren(createMessage("Failed to load requests.", "text-gray-600"));
+        }
+        return;
+      }
 
-      if (container && Array.isArray(requests)) {
-        container.innerHTML = ""; // Clear existing content
+      console.log("Total requests:", requests.length);
+
+      if (container) {
+        container.replaceChildren();
 
         if (requests.length === 0) {
-          container.innerHTML = "<p class='text-gray-600'>No document requests found.</p>";
+          container.replaceChildren(createMessage("No document requests found.", "text-gray-600 p-2"));
           return;
         }
 
-        // --- Step 3: Render each request and load its logs ---
+        // --- Step 2: Render each request ---
         for (const request of requests) {
           const requestDiv = document.createElement("div");
           requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4 cursor-pointer hover:bg-gray-50 transition-colors";
-          // Added 'cursor-pointer' and 'hover' for better UX
 
-          requestDiv.innerHTML = `
-            <div class="flex justify-between items-center">
-              <div>
-                <h1 class="text-xl font-bold text-gray-700">${formatLabel(request.documentType)}</h1>
-                <p class="text-sm text-gray-500">${new Date(request.requestedAt).toLocaleDateString()}</p>
-              </div>
-              <div class="text-right">
-                <span class="px-3 py-1 rounded-full text-sm font-bold ${request.status === 'Completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}">
-                  ${request.status}
-                </span>
-              </div>
-            </div>
-            <!-- Log container is hidden by default -->
-            <div id="logs-${request.id}" class="mt-4 pt-4 border-t border-gray-100 hidden">
-              <p class="text-sm text-gray-500">Loading logs...</p>
-            </div>
-          `;
+          const header = document.createElement("div");
+          header.className = "flex items-center justify-between gap-4";
 
-          // Toggle Logic
-          requestDiv.onclick = async () => {
-            const logsContainer = document.getElementById(`logs-${request.id}`);
+          const titleGroup = document.createElement("div");
+
+          const title = document.createElement("h1");
+          title.className = "text-xl font-bold text-gray-700";
+          title.textContent = formatLabel(request.documentType);
+
+          const requestedDate = document.createElement("p");
+          requestedDate.className = "text-sm text-gray-500";
+          requestedDate.textContent = formatDate(request.requestedAt);
+
+          titleGroup.append(title, requestedDate);
+
+          const statusGroup = document.createElement("div");
+          statusGroup.className = "flex shrink-0 items-center gap-2 text-right";
+
+          const statusBadge = document.createElement("span");
+          statusBadge.className = `px-3 py-1 rounded-full text-sm font-bold ${getStatusStyle(request.status)}`;
+          statusBadge.textContent = request.status ?? "UNKNOWN";
+
+          const payButton = document.createElement("button");
+          payButton.type = "button";
+          payButton.dataset.payButton = "true";
+          payButton.className = "hidden rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-blue-700 active:scale-[0.98]";
+          payButton.textContent = "Pay Now";
+          payButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            openPaymentModal(request, payButton);
+          });
+
+          const cancelButton = document.createElement("button");
+          cancelButton.type = "button";
+          cancelButton.dataset.cancelButton = "true";
+          cancelButton.className = "hidden rounded-lg border border-red-200 px-3 py-1.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50 active:scale-[0.98]";
+          cancelButton.textContent = "Cancel";
+          cancelButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+
+            const shouldCancel = confirm("Cancel this document request?");
+            if (!shouldCancel) return;
+
+            // TODO: Replace this UI-only placeholder with the cancel request API call once documentApi.js is ready.
+            request.status = "CANCELLED";
+            statusBadge.textContent = "CANCELLED";
+            statusBadge.className = `px-3 py-1 rounded-full text-sm font-bold ${getStatusStyle(request.status)}`;
+            payButton.classList.add("hidden");
+            cancelButton.classList.add("hidden");
+            console.log("Cancel request placeholder:", {
+              requestId: request.id,
+              status: request.status,
+            });
+          });
+
+          statusGroup.append(statusBadge);
+          if (canPayRequest(request.status)) {
+            statusGroup.append(payButton);
+          }
+          if (canCancelRequest(request.status)) {
+            statusGroup.append(cancelButton);
+          }
+          header.append(titleGroup, statusGroup);
+
+          const logsContainer = document.createElement("div");
+          logsContainer.id = `logs-${request.id}`;
+          logsContainer.className = "mt-4 hidden border-t border-gray-100 pt-4";
+          logsContainer.replaceChildren(createMessage("Loading logs...", "text-sm text-gray-500"));
+
+          requestDiv.append(header, logsContainer);
+
+          // Toggle Logic — use addEventListener for safer event handling
+          requestDiv.addEventListener('click', async () => {
             const isHidden = logsContainer.classList.contains('hidden');
 
             // Close all other open logs first
             document.querySelectorAll('[id^="logs-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[data-pay-button="true"]').forEach(button => button.classList.add('hidden'));
+            document.querySelectorAll('[data-cancel-button="true"]').forEach(button => button.classList.add('hidden'));
 
             // If it was hidden, open it and load data
             if (isHidden) {
               logsContainer.classList.remove('hidden');
+              if (canPayRequest(request.status)) {
+                payButton.classList.remove('hidden');
+              }
+              if (canCancelRequest(request.status)) {
+                cancelButton.classList.remove('hidden');
+              }
               await loadRequestLogs(request.id);
             }
-          };
+          });
 
           container.appendChild(requestDiv);
         }
-
       }
 
     } catch (error) {
@@ -319,43 +493,38 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const token = getAuthToken();
 
-      console.log(`\n=== LOAD LOGS DEBUG (Request ID: ${documentRequestId}) ===`);
-      console.log("Token exists:", !!token);
-      console.log("Token length:", token?.length || 0);
-      
       if (!token) {
         console.error("No auth token found");
         return;
       }
 
-      console.log("=== END DEBUG ===\n");
       const logs = await getRequestLogs(token, documentRequestId);
       const logsContainer = document.getElementById(`logs-${documentRequestId}`);
 
-      // --- Console log the logs for this request ---
-      console.log(`--- Logs for Request ID ${documentRequestId} ---`);
-      console.log("Total logs:", logs.length);
-      if (Array.isArray(logs) && logs.length > 0) {
-        logs.forEach((log, idx) => {
-          console.log(`  [${idx}] Status: ${log.requestStatus}, Date: ${log.dateAction}, Remarks: ${log.remarks || 'N/A'}`);
-        });
-      }
-      console.log("---\n");
-
       if (logsContainer && Array.isArray(logs)) {
         if (logs.length === 0) {
-          logsContainer.innerHTML = "<p class='text-sm text-gray-500'>No logs available.</p>";
+          logsContainer.replaceChildren(createMessage("No logs available.", "text-sm text-gray-500"));
           return;
         }
 
-        logsContainer.innerHTML = "<h6 class='text-md font-semibold text-gray-700 mb-2'>Request Logs:</h6>";
+        const heading = document.createElement("h6");
+        heading.className = "text-md font-semibold text-gray-700 mb-2";
+        heading.textContent = "Request Logs:";
+        logsContainer.replaceChildren(heading);
 
         logs.forEach((log) => {
           const logDiv = document.createElement("div");
           logDiv.className = "text-sm text-gray-600 mb-1";
-          logDiv.innerHTML = `
-            <span class="font-medium">${log.requestStatus}</span> - ${new Date(log.dateAction).toLocaleString()} ${log.remarks ? `- ${log.remarks}` : ''}
-          `;
+
+          const status = document.createElement("span");
+          status.className = "font-medium";
+          status.textContent = log.requestStatus ?? "UNKNOWN";
+
+          const details = document.createTextNode(
+            ` - ${formatDateTime(log.dateAction)}${log.remarks ? ` - ${log.remarks}` : ""}`
+          );
+
+          logDiv.append(status, details);
           logsContainer.appendChild(logDiv);
         });
       }
@@ -412,25 +581,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
       const token = getAuthToken();
 
-      // --- Debug: Check token status ---
-      console.log("=== FORM SUBMISSION DEBUG ===");
-      console.log("Token exists:", !!token);
-      console.log("Token length:", token?.length || 0);
-      if (token) {
-        console.log("Token value (FULL):", token);
-        console.log("Token includes 'Bearer'?", token.includes("Bearer"));
-      }
-      console.log("SessionStorage contents:");
-      for (let i = 0; i < sessionStorage.length; i++) {
-        const key = sessionStorage.key(i);
-        const value = sessionStorage.getItem(key);
-        console.log(`  ${key}:`, value?.substring ? value.substring(0, 40) + "..." : value);
-      }
-      console.log("=== END DEBUG ===\n");
-
       if (!token) {
         throw new Error("No auth token found. Please log in again.");
       }
+
+      console.log("Submitting document request...");
 
       // --- Build request payload ---
       const requestBody = {
@@ -443,7 +598,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         studentId: Number(studentId),
       };
 
-      console.log("Request payload:", requestBody);
+      console.log("Request payload:", { ...requestBody, studentId: requestBody.studentId });
 
       // --- Send request ---
       const data = await submitDocumentRequest(token, requestBody);
@@ -457,6 +612,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         messageContainer.textContent = "Document request submitted successfully!";
         messageContainer.className = "w-full max-w-lg mb-4 p-4 rounded-lg text-sm font-medium border bg-green-50 border-green-200 text-green-700";
         messageContainer.classList.remove("hidden");
+
+        // Auto-hide success message after 4 seconds
+        setTimeout(() => {
+          messageContainer.classList.add("hidden");
+        }, 4000);
 
         // Reset form and refresh requests list
         form.reset();

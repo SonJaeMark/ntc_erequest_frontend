@@ -137,7 +137,7 @@
 
             <!-- ── SIDEBAR ── -->
             <!-- On mobile: horizontal tab bar across top. On desktop: vertical full-height sidebar -->
-            <aside class="bg-white border-b md:border-b-0 md:border-r border-gray-200 shadow-sm md:w-52 flex-shrink-0 md:flex md:flex-col" style="min-height: 100%;">
+            <aside class="bg-white border-b md:border-b-0 md:border-r border-gray-200 shadow-sm md:w-52 flex-shrink-0 md:flex md:flex-col">
 
                 <!-- Mobile: horizontal tab row -->
                 <div class="flex md:hidden border-b border-gray-100">
@@ -236,7 +236,7 @@
 
                             <!-- Role -->
                             <div>
-                                <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
+                                <label for="reg-role" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5">
                                     Role <span class="text-red-500">*</span>
                                 </label>
                                 <select id="reg-role"
@@ -277,7 +277,7 @@
                                     oninput="filterAccounts()"
                                     class="w-full text-sm border border-gray-200 rounded-lg pl-9 pr-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition" />
                             </div>
-                            <select id="acc-role-filter" onchange="filterAccounts()"
+                            <select id="acc-role-filter" aria-label="Filter accounts by role" onchange="filterAccounts()"
                                 class="text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-white min-w-[140px]">
                                 <option value="STUDENT">Student</option>
                                 <option value="REGISTRAR">Registrar</option>
