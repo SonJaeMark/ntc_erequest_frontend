@@ -2,6 +2,7 @@ import {
   getPendingRequests,
   acceptDocumentRequest,
   getRegistrarRequests,
+  processDocumentRequest,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
 
@@ -100,7 +101,8 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       await acceptDocumentRequest(token, payload);
       alert("Request accepted!");
-      loadPoolRequests(); // refresh
+      loadPoolRequests(); // refresh pool
+      loadAcceptedRequest(); // refresh my requests
     } catch (err) {
       alert("Error: " + err.message);
     }
@@ -164,13 +166,26 @@ const loadAcceptedRequest = async () => {
                 <td class="px-5 py-4">${paymentBadge}</td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
-                        <button onclick="handleApprove('${req}')" class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
-                        <button onclick="handleReject('${req.docrequestid}')" class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
-                        <button onclick="openModal('${req.docrequestid}', '${req.documentType}', '${req.studentFullName}', '${initials}', '${dateStr}')"
-                            class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
+                        <button class="approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
+                        <button class="reject-btn text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
+                        <button class="view-btn text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
                     </div>
                 </td>
             `;
+
+            // Add event listeners
+            row.querySelector(".approve-btn").onclick = () => handleApprove(req);
+            row.querySelector(".reject-btn").onclick = () => handleReject(req);
+            row.querySelector(".view-btn").onclick = () => {
+              openModal(
+                req.id,
+                req.documentType,
+                req.studentFullName,
+                initials,
+                dateStr
+              );
+            };
+
             acceptedTableBody.appendChild(row);
         });
     } catch (err) {
@@ -179,30 +194,45 @@ const loadAcceptedRequest = async () => {
     }
 };
 
-  handleApprove(rec)= async () => {
+  const handleApprove = async (rec) => {
     const token = getAuthToken();
     if (!token) return;
     const registrarId = sessionStorage.getItem("userId");
     const payload = {
       id: rec.id,
-      purpose: rec.purpose,
-      documentType: rec.documentType,
-      documentId: rec.documentId,
-      additionalDetails: rec.additionalDetails,
-      remarks: "Accepted by registrar",
-      status: "READY",
-      studentId: rec.studentId,
+      status: "READY_FOR_RELEASE", // Standard status from DTO docstring
+      remarks: "Approved and ready for release",
       registrarId: Number(registrarId),
     };
-    console.log(payload);
+    console.log("Approving payload:", payload);
     try {
       await processDocumentRequest(token, payload);
-      alert("Request processed!");
-      loadPoolRequests(); // refresh
+      alert("Request approved and ready for release!");
+      loadAcceptedRequest(); // refresh my requests
     } catch (err) {
       alert("Error: " + err.message);
     }
-  }
+  };
+
+  const handleReject = async (rec) => {
+    const token = getAuthToken();
+    if (!token) return;
+    const registrarId = sessionStorage.getItem("userId");
+    const payload = {
+      id: rec.id,
+      status: "REJECTED",
+      remarks: "Request rejected by registrar",
+      registrarId: Number(registrarId),
+    };
+    console.log("Rejecting payload:", payload);
+    try {
+      await processDocumentRequest(token, payload);
+      alert("Request rejected!");
+      loadAcceptedRequest(); // refresh my requests
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
 
 
   // --- Load Request Pool ---
