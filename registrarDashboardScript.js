@@ -114,19 +114,23 @@ document.addEventListener("DOMContentLoaded", async () => {
    * Count requests by status and update the stat card numbers
    */
   const renderStatCards = (requests) => {
-    const pending  = requests.filter(r => r.status === "PENDING").length;
-    const review   = requests.filter(r => r.status === "IN_REVIEW").length;
-    const approved = requests.filter(r => r.status === "APPROVED").length;
+    // Sprint 2: updated to reflect new status flow
+    const pending    = requests.filter(r => r.status === "PENDING").length;
+    const processing = requests.filter(r => r.status === "PROCESSING").length;
+    const available  = requests.filter(r => r.status === "AVAILABLE_TO_CLAIM").length;
+    const approved   = requests.filter(r => r.status === "APPROVED").length;
 
-    const statPending  = document.getElementById("stat-pending");
-    const statReview   = document.getElementById("stat-review");
-    const statApproved = document.getElementById("stat-approved");
+    const statPending    = document.getElementById("stat-pending");
+    const statProcessing = document.getElementById("stat-processing");
+    const statAvailable  = document.getElementById("stat-available");
+    const statApproved   = document.getElementById("stat-approved");
 
-    if (statPending)  statPending.textContent  = pending;
-    if (statReview)   statReview.textContent   = review;
-    if (statApproved) statApproved.textContent = approved;
+    if (statPending)    statPending.textContent    = pending;
+    if (statProcessing) statProcessing.textContent = processing;
+    if (statAvailable)  statAvailable.textContent  = available;
+    if (statApproved)   statApproved.textContent   = approved;
 
-    console.log(`Stats — Pending: ${pending}, In Review: ${review}, Approved: ${approved}`);
+    console.log(`Stats — Pending: ${pending}, Processing: ${processing}, Available: ${available}, Approved: ${approved}`);
   };
 
   // ============================================================
@@ -172,7 +176,29 @@ document.addEventListener("DOMContentLoaded", async () => {
    * @param {object} req              - The request object
    * @param {boolean} includeDataAttr - Attach data-status for filter support
    */
-  const buildTableRow = (req, includeDataAttr = false) => `
+  const buildTableRow = (req, includeDataAttr = false) => {
+    const encodedReq = JSON.stringify(req).replace(/"/g, '&quot;');
+
+    // Sprint 3: Show "Verify Payment" button if request has a pending payment
+    const hasPayment = req.payment && req.payment.status === "PENDING";
+    const actionBtn = hasPayment
+      ? `<button
+           class="text-green-600 font-bold hover:text-green-800 transition-colors text-sm mr-2"
+           onclick="openPaymentVerifyModal(${encodedReq})">
+           Verify Payment
+         </button>
+         <button
+           class="text-blue-600 font-bold hover:text-blue-800 transition-colors text-sm"
+           onclick="openProcessModal(${encodedReq})">
+           Process
+         </button>`
+      : `<button
+           class="text-blue-600 font-bold hover:text-blue-800 transition-colors text-sm"
+           onclick="openProcessModal(${encodedReq})">
+           Process
+         </button>`;
+
+    return `
     <tr class="hover:bg-gray-50 transition-colors" ${includeDataAttr ? `data-status="${req.status}"` : ""}>
       <td class="px-6 py-4 font-medium text-gray-900">${req.studentFullName ?? "—"}</td>
       <td class="px-6 py-4 text-gray-600">${formatLabel(req.documentType)}</td>
@@ -180,14 +206,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         ${new Date(req.requestedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
       </td>
       <td class="px-6 py-4">${buildStatusBadge(req.status)}</td>
-      <td class="px-6 py-4 text-right">
-        <button
-          class="text-blue-600 font-bold hover:text-blue-800 transition-colors text-sm"
-          onclick="openProcessModal(${JSON.stringify(req).replace(/"/g, '&quot;')})">
-          Process
-        </button>
-      </td>
+      <td class="px-6 py-4 text-right">${actionBtn}</td>
     </tr>`;
+  };
 
   /**
    * Build a colored status pill badge
@@ -279,11 +300,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // --- Disable both action buttons while submitting ---
-      const approveBtn = document.getElementById("modal-approve-btn");
-      const rejectBtn  = document.getElementById("modal-reject-btn");
-      if (approveBtn) { approveBtn.disabled = true; approveBtn.textContent = "Processing..."; }
-      if (rejectBtn)  { rejectBtn.disabled  = true; rejectBtn.textContent  = "Processing..."; }
+      // --- Disable all action buttons while submitting ---
+      const approveBtn     = document.getElementById("modal-approve-btn");
+      const rejectBtn      = document.getElementById("modal-reject-btn");
+      const processingBtn  = document.getElementById("modal-processing-btn");
+      const availableBtn   = document.getElementById("modal-available-btn");
+      [approveBtn, rejectBtn, processingBtn, availableBtn].forEach(btn => {
+        if (btn) { btn.disabled = true; btn.textContent = "Processing..."; }
+      });
 
       // --- Build request payload ---
       const requestBody = {
@@ -366,11 +390,15 @@ document.addEventListener("DOMContentLoaded", async () => {
       alert("Failed to process request: " + error.message);
 
     } finally {
-      // Re-enable buttons regardless of outcome
-      const approveBtn = document.getElementById("modal-approve-btn");
-      const rejectBtn  = document.getElementById("modal-reject-btn");
-      if (approveBtn) { approveBtn.disabled = false; approveBtn.textContent = "Approve"; }
-      if (rejectBtn)  { rejectBtn.disabled  = false; rejectBtn.textContent  = "Reject";  }
+      // Re-enable all buttons regardless of outcome
+      const approveBtn    = document.getElementById("modal-approve-btn");
+      const rejectBtn     = document.getElementById("modal-reject-btn");
+      const processingBtn = document.getElementById("modal-processing-btn");
+      const availableBtn  = document.getElementById("modal-available-btn");
+      if (approveBtn)    { approveBtn.disabled    = false; approveBtn.textContent    = "Approve"; }
+      if (rejectBtn)     { rejectBtn.disabled     = false; rejectBtn.textContent     = "Reject"; }
+      if (processingBtn) { processingBtn.disabled = false; processingBtn.textContent = "Mark Processing"; }
+      if (availableBtn)  { availableBtn.disabled  = false; availableBtn.textContent  = "Available to Claim"; }
     }
   };
 
@@ -390,6 +418,168 @@ document.addEventListener("DOMContentLoaded", async () => {
       console.log("Filter applied:", val || "ALL");
     });
   }
+
+
+  // ============================================================
+  // SPRINT 3 — PAYMENT VERIFICATION MODAL
+  // ============================================================
+
+  /**
+   * Open the payment verification modal for a request that has a pending payment.
+   * Called from the "Verify Payment" button in the table row.
+   * @param {object} req - The full request object including payment details
+   */
+  window.openPaymentVerifyModal = (req) => {
+    const modal       = document.getElementById("payment-verify-modal");
+    const paymentId   = document.getElementById("verify-payment-id");
+    const studentName = document.getElementById("verify-student-name");
+    const docType     = document.getElementById("verify-doc-type");
+    const reference   = document.getElementById("verify-reference");
+    const amount      = document.getElementById("verify-amount");
+    const errorEl     = document.getElementById("verify-error");
+
+    if (!modal) {
+      console.error("Payment verify modal not found in the DOM.");
+      return;
+    }
+
+    console.log("=== OPEN PAYMENT VERIFY MODAL DEBUG ===");
+    console.log("Request ID:", req.id);
+    console.log("Student:", req.studentFullName);
+    console.log("Payment reference:", req.payment?.referenceNumber);
+    console.log("Amount:", req.payment?.amount);
+    console.log("=== END DEBUG ===
+");
+
+    if (paymentId)   paymentId.value          = req.payment?.id ?? req.id;
+    if (studentName) studentName.textContent  = req.studentFullName ?? "—";
+    if (docType)     docType.textContent      = formatLabel(req.documentType);
+    if (reference)   reference.textContent    = req.payment?.referenceNumber ?? "—";
+    if (amount)      amount.textContent       = req.payment?.amount ? `₱${req.payment.amount}` : "—";
+    if (errorEl)     errorEl.classList.add("hidden");
+
+    modal.classList.remove("hidden");
+  };
+
+  /**
+   * Close the payment verification modal
+   */
+  window.closePaymentVerifyModal = () => {
+    const modal = document.getElementById("payment-verify-modal");
+    if (modal) modal.classList.add("hidden");
+  };
+
+  /**
+   * Submit payment verification decision (CONFIRMED or REJECTED).
+   * @param {string} decision - "CONFIRMED" or "REJECTED"
+   */
+  window.submitPaymentVerification = async (decision) => {
+    const paymentId    = document.getElementById("verify-payment-id")?.value;
+    const errorEl      = document.getElementById("verify-error");
+    const confirmBtn   = document.getElementById("verify-confirm-btn");
+    const rejectBtn    = document.getElementById("verify-reject-btn");
+    const btnText      = document.getElementById("verify-btn-text");
+
+    if (!paymentId) {
+      errorEl.textContent = "Something went wrong. Please close and try again.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    // --- Disable buttons + show spinner ---
+    [confirmBtn, rejectBtn].forEach(btn => { if (btn) btn.disabled = true; });
+    if (btnText) btnText.textContent = "Submitting...";
+    const spinner = document.createElement("span");
+    spinner.className = "spinner";
+    spinner.id = "verify-spinner";
+    if (confirmBtn) confirmBtn.prepend(spinner);
+
+    try {
+      const token = getAuthToken();
+      const registrarId = Number(sessionStorage.getItem("userId")) || 0;
+
+      console.log("=== PAYMENT VERIFICATION DEBUG ===");
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      if (token) {
+        console.log("Token value (FULL):", token);
+        console.log("Token includes 'Bearer'?", token.includes("Bearer"));
+      }
+      console.log("Payment ID:", paymentId);
+      console.log("Decision:", decision);
+      console.log("Registrar ID:", registrarId);
+      console.log("SessionStorage contents:");
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        const value = sessionStorage.getItem(key);
+        console.log(`  ${key}:`, value?.substring ? value.substring(0, 40) + "..." : value);
+      }
+      console.log("=== END DEBUG ===
+");
+
+      if (!token) {
+        throw new Error("No auth token found. Please log in again.");
+      }
+
+      const requestBody = {
+        status: decision,
+        registrarId,
+      };
+
+      console.log("Payment verification payload:", requestBody);
+
+      const headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+
+      const fetchOptions = {
+        method: "POST",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      };
+
+      console.log("Request headers:");
+      console.log("  Accept:", headers.Accept);
+      console.log("  Content-Type:", headers["Content-Type"]);
+      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
+      console.log("Fetch URL:", `${BASE_URL}/api/payment/verify/${paymentId}`);
+      console.log("Fetch options:", fetchOptions);
+
+      const response = await fetch(`${BASE_URL}/api/payment/verify/${paymentId}`, fetchOptions);
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`Verification failed: ${response.status} - ${text}`);
+      }
+
+      const data = text ? JSON.parse(text) : null;
+
+      console.log("Payment verification submitted successfully.");
+      console.log("Decision:", decision, "| Payment ID:", paymentId);
+      console.log("Response data:", data);
+
+      alert(`Payment ${formatLabel(decision)} successfully.`);
+
+      closePaymentVerifyModal();
+      await loadAllRequests();
+
+    } catch (error) {
+      console.error("Error verifying payment:", error.message);
+      errorEl.textContent = "Failed to verify payment: " + error.message;
+      errorEl.classList.remove("hidden");
+
+    } finally {
+      [confirmBtn, rejectBtn].forEach(btn => { if (btn) btn.disabled = false; });
+      if (btnText) btnText.textContent = "Confirm Payment";
+      const sp = document.getElementById("verify-spinner");
+      if (sp) sp.remove();
+    }
+  };
 
   // ============================================================
   // INITIAL LOAD

@@ -174,23 +174,64 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        // --- Step 3: Render each request and load its logs ---
-        for (const request of requests) {
-          const requestDiv = document.createElement("div");
-          requestDiv.className = "bg-white p-4 rounded-lg shadow mb-4";
+        // --- Step 3: Set grid layout and render each request as a flippable card ---
+        container.style.cssText = "display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;";
 
-          requestDiv.innerHTML = `
-            <h1 class="text-xl font-bold text-gray-700 mb-2">${formatLabel(request.documentType)}</h1>
-            <div>
-              <h5 class="text-lg font-bold text-gray-600">Status: ${request.status}</h5>
-              <p>${new Date(request.requestedAt).toLocaleDateString()}</p>
-            </div>
-            <div id="logs-${request.id}" class="mt-4">
-              <p class="text-sm text-gray-500">Loading logs...</p>
+        for (const request of requests) {
+          const statusClass = `status-${request.status}`;
+
+          // Sprint 3: Show "Pay Now" button on front if status is AVAILABLE_TO_CLAIM
+          const payBtn = request.status === "AVAILABLE_TO_CLAIM"
+            ? `<button
+                class="mt-2 w-full bg-green-500 hover:bg-green-600 text-white text-xs font-bold py-1.5 rounded-lg transition-colors"
+                onclick="event.stopPropagation(); openPaymentModal('${request.id}', '${request.documentType}')">
+                Pay via GCash
+               </button>`
+            : "";
+
+          const card = document.createElement("div");
+          card.className = "flip-card";
+          card.innerHTML = `
+            <div class="flip-card-inner">
+              <div class="flip-card-front">
+                <div>
+                  <p style="font-size:13px;color:#6b7280;margin:0 0 4px">${formatLabel(request.documentType)}</p>
+                  <p style="font-size:17px;font-weight:700;margin:0 0 10px;color:#1e3a5f">Document Request</p>
+                  <span class="status-badge ${statusClass}">
+                    <span class="status-dot"></span>${formatLabel(request.status)}
+                  </span>
+                  ${payBtn}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:12px;color:#9ca3af">${new Date(request.requestedAt).toLocaleDateString()}</span>
+                  <span class="flip-hint">
+                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M2 8c0-3.3 2.7-6 6-6s6 2.7 6 6-2.7 6-6 6"/>
+                      <path d="M10 6l2 2-2 2"/>
+                    </svg>
+                    Flip for remarks
+                  </span>
+                </div>
+              </div>
+              <div class="flip-card-back">
+                <div style="flex:1;overflow:hidden">
+                  <p style="font-size:11px;font-weight:700;color:#6b7280;margin:0 0 8px;text-transform:uppercase;letter-spacing:0.05em">Registrar Remarks</p>
+                  <div id="logs-${request.id}" class="logs-scroll">
+                    <p style="font-size:12px;color:#9ca3af">Loading logs...</p>
+                  </div>
+                </div>
+                <span class="flip-hint" style="justify-content:flex-end;margin-top:8px">
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 8c0 3.3-2.7 6-6 6S2 11.3 2 8s2.7-6 6-6"/>
+                    <path d="M6 10l-2-2 2-2"/>
+                  </svg>
+                  Flip back
+                </span>
+              </div>
             </div>
           `;
-
-          container.appendChild(requestDiv);
+          card.addEventListener("click", () => card.classList.toggle("flipped"));
+          container.appendChild(card);
 
           // Load logs for this request
           await loadRequestLogs(request.id);
@@ -275,13 +316,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           return;
         }
 
-        logsContainer.innerHTML = "<h6 class='text-md font-semibold text-gray-700 mb-2'>Request Logs:</h6>";
+        logsContainer.innerHTML = "";
 
         logs.forEach((log) => {
           const logDiv = document.createElement("div");
-          logDiv.className = "text-sm text-gray-600 mb-1";
+          logDiv.className = "log-entry";
           logDiv.innerHTML = `
-            <span class="font-medium">${log.requestStatus}</span> - ${new Date(log.dateAction).toLocaleString()} ${log.remarks ? `- ${log.remarks}` : ''}
+            <span style="font-size:11px;font-weight:700;color:#374151">${log.requestStatus}</span><br>
+            ${log.remarks
+              ? `<span>${log.remarks}</span><br>`
+              : `<span style="color:#9ca3af;font-style:italic">No remarks provided.</span><br>`}
+            <span style="font-size:11px;color:#9ca3af">${new Date(log.dateAction).toLocaleString()}</span>
           `;
           logsContainer.appendChild(logDiv);
         });
@@ -431,5 +476,178 @@ document.addEventListener("DOMContentLoaded", async () => {
       submitBtn.textContent = "Request Document";
     }
   });
+
+
+  // ============================================================
+  // SPRINT 3 — GCASH PAYMENT MODAL
+  // ============================================================
+
+  /**
+   * Open the payment modal for a specific request.
+   * Called from the "Pay via GCash" button on AVAILABLE_TO_CLAIM cards.
+   * @param {string} requestId   - The document request ID
+   * @param {string} documentType - Raw enum string for display
+   */
+  window.openPaymentModal = (requestId, documentType) => {
+    const modal        = document.getElementById("payment-modal");
+    const reqIdInput   = document.getElementById("payment-request-id");
+    const docTypeEl    = document.getElementById("payment-doc-type");
+    const refInput     = document.getElementById("gcash-reference");
+    const amountInput  = document.getElementById("gcash-amount");
+    const errorEl      = document.getElementById("payment-error");
+
+    if (!modal) {
+      console.error("Payment modal not found in the DOM.");
+      return;
+    }
+
+    console.log("=== OPEN PAYMENT MODAL DEBUG ===");
+    console.log("Request ID:", requestId);
+    console.log("Document Type:", documentType);
+    console.log("=== END DEBUG ===\n");
+
+    // Populate fields
+    if (reqIdInput)  reqIdInput.value       = requestId;
+    if (docTypeEl)   docTypeEl.textContent  = formatLabel(documentType);
+    if (refInput)    refInput.value         = "";
+    if (amountInput) amountInput.value      = "";
+    if (errorEl)     errorEl.classList.add("hidden");
+
+    modal.classList.remove("hidden");
+  };
+
+  /**
+   * Close the payment modal without submitting
+   */
+  window.closePaymentModal = () => {
+    const modal = document.getElementById("payment-modal");
+    if (modal) modal.classList.add("hidden");
+  };
+
+  /**
+   * Submit GCash payment details linked to the document request.
+   * Sends reference number and amount to the payment endpoint.
+   */
+  window.submitPayment = async () => {
+    const requestId   = document.getElementById("payment-request-id")?.value;
+    const reference   = document.getElementById("gcash-reference")?.value.trim();
+    const amount      = document.getElementById("gcash-amount")?.value.trim();
+    const errorEl     = document.getElementById("payment-error");
+    const submitBtn   = document.getElementById("payment-submit-btn");
+    const btnText     = document.getElementById("payment-btn-text");
+
+    // --- Validate inputs ---
+    if (!reference) {
+      errorEl.textContent = "Please enter your GCash reference number.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+    if (!amount || Number(amount) <= 0) {
+      errorEl.textContent = "Please enter a valid amount.";
+      errorEl.classList.remove("hidden");
+      return;
+    }
+
+    errorEl.classList.add("hidden");
+
+    // --- Disable button + show spinner ---
+    submitBtn.disabled = true;
+    btnText.textContent = "Submitting...";
+    const spinner = document.createElement("span");
+    spinner.className = "spinner";
+    spinner.id = "payment-spinner";
+    submitBtn.prepend(spinner);
+
+    try {
+      const token = getAuthToken();
+
+      console.log("=== PAYMENT SUBMISSION DEBUG ===");
+      console.log("Token exists:", !!token);
+      console.log("Token length:", token?.length || 0);
+      if (token) {
+        console.log("Token value (FULL):", token);
+        console.log("Token includes 'Bearer'?", token.includes("Bearer"));
+      }
+      console.log("Request ID:", requestId);
+      console.log("GCash Reference:", reference);
+      console.log("Amount:", amount);
+      console.log("SessionStorage contents:");
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const key = sessionStorage.key(i);
+        const value = sessionStorage.getItem(key);
+        console.log(`  ${key}:`, value?.substring ? value.substring(0, 40) + "..." : value);
+      }
+      console.log("=== END DEBUG ===\n");
+
+      if (!token) {
+        throw new Error("No auth token found. Please log in again.");
+      }
+
+      // --- Build request payload ---
+      const requestBody = {
+        documentRequestId: Number(requestId),
+        referenceNumber: reference,
+        amount: Number(amount),
+        paymentMethod: "GCASH",
+      };
+
+      console.log("Payment payload:", requestBody);
+
+      // --- Build headers ---
+      const headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+
+      // --- Build fetch options ---
+      const fetchOptions = {
+        method: "POST",
+        mode: "cors",
+        cache: "no-store",
+        credentials: "include",
+        headers: headers,
+        body: JSON.stringify(requestBody),
+      };
+
+      console.log("Request headers:");
+      console.log("  Accept:", headers.Accept);
+      console.log("  Content-Type:", headers["Content-Type"]);
+      console.log("  Authorization:", headers["Authorization"].substring(0, 40) + "...");
+      console.log("Fetch URL:", `${BASE_URL}/api/payment/submit`);
+      console.log("Fetch options:", fetchOptions);
+
+      // --- Send payment request ---
+      const response = await fetch(`${BASE_URL}/api/payment/submit`, fetchOptions);
+      const text = await response.text();
+
+      if (!response.ok) {
+        throw new Error(`Payment failed: ${response.status} - ${text}`);
+      }
+
+      const data = text ? JSON.parse(text) : null;
+
+      console.log("Payment submitted successfully.");
+      console.log("Response data:", data);
+
+      alert("Payment submitted successfully! The registrar will verify your payment shortly.");
+
+      // Close modal and refresh requests
+      closePaymentModal();
+      await loadDocumentRequests();
+
+    } catch (error) {
+      console.error("Error submitting payment:", error.message);
+      errorEl.textContent = "Failed to submit payment: " + error.message;
+      errorEl.classList.remove("hidden");
+
+    } finally {
+      // Re-enable button
+      submitBtn.disabled = false;
+      btnText.textContent = "Submit Payment";
+      const spinner = document.getElementById("payment-spinner");
+      if (spinner) spinner.remove();
+    }
+  };
 
 });
