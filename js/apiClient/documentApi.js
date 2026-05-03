@@ -53,3 +53,10 @@ export function acceptDocumentRequest(token, payload) {
     })
   );
 }
+
+export function getRegistrarRequests(token) {
+  return apiRequest(
+    `/api/document-request/registrar`,
+    withAuth(token, { method: "GET" })
+  );
+}
