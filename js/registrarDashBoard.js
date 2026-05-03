@@ -4,88 +4,121 @@ import {
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
 
-document.addEventListener("DOMContentLoaded", async () => {
-  // --- Auth guard: requires REGISTRAR role ---
+document.addEventListener("DOMContentLoaded", () => {
   requireRole(["REGISTRAR"]);
 
+  // --- Elements ---
   const firstNameEl = document.getElementById("navbar-firstname");
+  const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
   const logoutBtn = document.getElementById("logout-btn");
-  const tableBody = document.getElementById("pool-requests-table-body");
+  const logoutBtnMobile = document.getElementById("logout-btn-mobile");
+  const hamburgerBtn = document.getElementById("hamburger-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  // ✅ IMPORTANT: use existing tbody (no HTML changes)
+  const tableBody = document.querySelector("#request-pool tbody");
+
+  const sections = ["dashboard", "request-pool", "my-requests"];
 
   // --- Helpers ---
   const getFirstName = () => {
     const email = sessionStorage.getItem("email") ?? "";
-    return email.split("@")[0] ?? "Registrar";
+    return email.split("@")[0] || "Registrar";
   };
 
-  const getAuthToken = () => sessionStorage.getItem("ntc_access_token");
+  const getAuthToken = () =>
+    sessionStorage.getItem("ntc_access_token");
 
-  const formatLabel = (type) =>
-    type
-      .replace(/_/g, " ")
-      .toLowerCase()
-      .replace(/\b\w/g, (c) => c.toUpperCase());
+  const logout = () => {
+    apiLogout(
+      sessionStorage.getItem("ntc_access_token"),
+      localStorage.getItem("ntc_refresh_token")
+    );
+    sessionStorage.clear();
+    localStorage.clear();
+    window.location.href = "index.html";
+  };
 
-  const logout = async () => {
-    try {
-      const token = sessionStorage.getItem("ntc_access_token");
-      const refreshToken = localStorage.getItem("ntc_refresh_token");
-      if (token && refreshToken) {
-        await apiLogout(refreshToken, token);
+  // --- Navigation ---
+  const navigateTo = (targetId) => {
+    sections.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) {
+        section.classList.toggle("hidden", id !== targetId);
       }
-    } catch (err) {
-      console.error("Logout API call failed:", err);
-    } finally {
-      sessionStorage.clear();
-      localStorage.clear();
-      window.location.href = "index.html";
-    }
+    });
   };
 
-  // --- Actions ---
-  const handleAccept = async (request) => {
+  // --- Navbar ---
+  const firstName = getFirstName();
+  if (firstNameEl) firstNameEl.textContent = firstName;
+  if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
+
+  // --- Nav click ---
+  document.querySelectorAll(".nav-link, .nav-link-mobile").forEach(link => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const targetId = link.getAttribute("href").substring(1);
+      navigateTo(targetId);
+      mobileMenu.classList.remove("open");
+    });
+  });
+
+  // --- Logout ---
+  if (logoutBtn) logoutBtn.addEventListener("click", logout);
+  if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
+
+  // --- Hamburger ---
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("open");
+    });
+  }
+
+  // --- Accept Request ---
+  const handleAccept = async (req) => {
     const token = getAuthToken();
     if (!token) return;
 
     const registrarId = sessionStorage.getItem("userId");
-    
-    // Prepare payload based on the API requirement
+
     const payload = {
-      docrequestid: request.docrequestid,
-      purpose: request.purpose,
-      documentType: request.documentType,
-      documentId: request.documentId,
-      additionalDetails: request.additionalDetails,
-      remarks: "Request accepted by registrar",
-      status: "PROCESSING", // Or whatever the next status should be
-      studentId: request.studentId,
-      registrarId: Number(registrarId)
+      docrequestid: req.docrequestid,
+      purpose: req.purpose,
+      documentType: req.documentType,
+      documentId: req.documentId,
+      additionalDetails: req.additionalDetails,
+      remarks: "Accepted by registrar",
+      status: "PROCESSING",
+      studentId: req.studentId,
+      registrarId: Number(registrarId),
     };
 
     try {
       await acceptDocumentRequest(token, payload);
-      alert("Request accepted successfully!");
-      loadPoolRequests(); // Refresh table
-    } catch (error) {
-      console.error("Error accepting request:", error);
-      alert("Failed to accept request: " + error.message);
+      alert("Request accepted!");
+      loadPoolRequests(); // refresh
+    } catch (err) {
+      alert("Error: " + err.message);
     }
   };
 
+  // --- Load Request Pool ---
   const loadPoolRequests = async () => {
     const token = getAuthToken();
-    if (!token) return;
+    if (!token || !tableBody) return;
 
     try {
       const requests = await getPendingRequests(token);
-      
-      if (!tableBody) return;
+
       tableBody.innerHTML = "";
 
       if (!requests || requests.length === 0) {
         tableBody.innerHTML = `
           <tr>
-            <td colspan="6" class="px-6 py-10 text-center text-gray-500">No pending requests found.</td>
+            <td colspan="5" class="px-6 py-10 text-center text-gray-500">
+              No pending requests found.
+            </td>
           </tr>
         `;
         return;
@@ -94,54 +127,107 @@ document.addEventListener("DOMContentLoaded", async () => {
       requests.forEach((req) => {
         const row = document.createElement("tr");
         row.className = "hover:bg-gray-50 transition-colors";
-        
-        const dateStr = req.requestedAt ? new Date(req.requestedAt).toLocaleDateString() : "N/A";
-        
+
+        const initials = req.studentFullName
+          ? req.studentFullName
+              .split(" ")
+              .map(n => n[0])
+              .join("")
+              .toUpperCase()
+          : "S";
+
+        const dateStr = req.requestedAt
+          ? new Date(req.requestedAt).toLocaleString()
+          : "N/A";
+
         row.innerHTML = `
-          <td class="px-6 py-4">
-            <div class="flex items-center gap-3">
+          <td class="px-5 py-4 text-gray-400 font-bold text-xs">
+            #${req.docrequestid}
+          </td>
+
+          <td class="px-5 py-4 font-bold text-gray-700">
+            ${req.documentType}
+          </td>
+
+          <td class="px-5 py-4">
+            <div class="flex items-center gap-2.5">
               <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black">
-                ${req.studentFullName ? req.studentFullName.charAt(0) : "S"}
+                ${initials}
               </div>
-              <span class="font-bold text-gray-700">${req.studentFullName || "Unknown Student"}</span>
+              <span class="font-bold text-gray-700">
+                ${req.studentFullName || "Unknown"}
+              </span>
             </div>
           </td>
-          <td class="px-6 py-4 font-medium text-gray-700">${formatLabel(req.documentType)}</td>
-          <td class="px-6 py-4 text-gray-600">${formatLabel(req.purpose)}</td>
-          <td class="px-6 py-4 text-gray-500">${dateStr}</td>
-          <td class="px-6 py-4">
-            <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
-              ${req.status}
-            </span>
+
+          <td class="px-5 py-4 text-gray-500">
+            ${dateStr}
           </td>
-          <td class="px-6 py-4 text-right">
-            <button class="accept-btn text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">
-              Accept
-            </button>
+
+          <td class="px-5 py-4 text-right">
+            <div class="flex justify-end gap-2">
+              <button class="accept-btn text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-4 py-1.5 rounded-lg">
+                Accept
+              </button>
+
+              <button class="view-btn text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg">
+                View
+              </button>
+            </div>
           </td>
         `;
 
-        // Add event listener to accept button
-        const btn = row.querySelector(".accept-btn");
-        btn.onclick = () => handleAccept(req);
+        // Accept button
+        row.querySelector(".accept-btn").onclick = () => handleAccept(req);
+
+        // View button
+        row.querySelector(".view-btn").onclick = () => {
+          openModal(
+            req.docrequestid,
+            req.documentType,
+            req.studentFullName,
+            initials,
+            dateStr
+          );
+        };
 
         tableBody.appendChild(row);
       });
+
     } catch (error) {
-      console.error("Error loading pool requests:", error);
-      if (tableBody) {
-        tableBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="px-6 py-10 text-center text-red-500 font-bold">Error loading requests. Please try again.</td>
-          </tr>
-        `;
-      }
+      console.error(error);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-6 py-10 text-center text-red-500 font-bold">
+            Error loading requests.
+          </td>
+        </tr>
+      `;
     }
   };
 
-  // --- Initialization ---
-  if (firstNameEl) firstNameEl.textContent = getFirstName();
-  if (logoutBtn) logoutBtn.addEventListener("click", logout);
-
+  // --- Init ---
+  navigateTo("dashboard");
   loadPoolRequests();
 });
+
+
+// ✅ GLOBAL MODAL FUNCTIONS (required for HTML onclick)
+window.openModal = (id, docType, name, initials, date) => {
+  document.getElementById("modal-id").textContent = "#" + id;
+  document.getElementById("modal-doctype").textContent = docType;
+  document.getElementById("modal-name").textContent = name;
+  document.getElementById("modal-avatar").textContent = initials;
+  document.getElementById("modal-date").textContent = date;
+  document.getElementById("modal-overlay").classList.remove("hidden");
+};
+
+window.closeModal = () => {
+  document.getElementById("modal-overlay").classList.add("hidden");
+};
+
+window.handleOverlayClick = (e) => {
+  if (e.target.id === "modal-overlay") {
+    closeModal();
+  }
+};
