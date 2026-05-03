@@ -441,7 +441,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         remarks: "",
         status: "PENDING",
         studentId: Number(studentId),
-        registrarId: 0,
       };
 
       console.log("Request payload:", requestBody);

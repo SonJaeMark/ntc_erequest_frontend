@@ -1,7 +1,7 @@
 import {
   getPendingRequests,
   acceptDocumentRequest,
-  getAcceptedRequests,
+  getRegistrarRequests,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
 
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const registrarId = sessionStorage.getItem("userId");
 
     const payload = {
-      docrequestid: req.docrequestid,
+      id: req.id,
       purpose: req.purpose,
       documentType: req.documentType,
       documentId: req.documentId,
@@ -96,6 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
       registrarId: Number(registrarId),
     };
 
+    console.log(payload);
     try {
       await acceptDocumentRequest(token, payload);
       alert("Request accepted!");
@@ -111,7 +112,9 @@ const loadAcceptedRequest = async () => {
     if (!token || !acceptedTableBody) return;
 
     try {
-        const requests = await getAcceptedRequests(token);
+        const requests = await getRegistrarRequests(token);
+        console.log(requests);
+
         acceptedTableBody.innerHTML = "";
 
         if (!requests || requests.length === 0) {
@@ -147,7 +150,7 @@ const loadAcceptedRequest = async () => {
                 : `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
 
             row.innerHTML = `
-                <td class="px-5 py-4 text-gray-400 font-bold text-xs">#${req.docrequestid}</td>
+                <td class="px-5 py-4 text-gray-400 font-bold text-xs">#${req.id}</td>
                 <td class="px-5 py-4 font-bold text-gray-700">${req.documentType}</td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2.5">
@@ -161,7 +164,7 @@ const loadAcceptedRequest = async () => {
                 <td class="px-5 py-4">${paymentBadge}</td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
-                        <button onclick="handleApprove('${req.docrequestid}')" class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
+                        <button onclick="handleApprove('${req}')" class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
                         <button onclick="handleReject('${req.docrequestid}')" class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
                         <button onclick="openModal('${req.docrequestid}', '${req.documentType}', '${req.studentFullName}', '${initials}', '${dateStr}')"
                             class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
@@ -175,6 +178,31 @@ const loadAcceptedRequest = async () => {
         alert("Error loading requests: " + err.message);
     }
 };
+
+  handleApprove(rec)= async () => {
+    const token = getAuthToken();
+    if (!token) return;
+    const registrarId = sessionStorage.getItem("userId");
+    const payload = {
+      id: rec.id,
+      purpose: rec.purpose,
+      documentType: rec.documentType,
+      documentId: rec.documentId,
+      additionalDetails: rec.additionalDetails,
+      remarks: "Accepted by registrar",
+      status: "READY",
+      studentId: rec.studentId,
+      registrarId: Number(registrarId),
+    };
+    console.log(payload);
+    try {
+      await processDocumentRequest(token, payload);
+      alert("Request processed!");
+      loadPoolRequests(); // refresh
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  }
 
 
   // --- Load Request Pool ---
@@ -216,7 +244,7 @@ const loadAcceptedRequest = async () => {
 
         row.innerHTML = `
           <td class="px-5 py-4 text-gray-400 font-bold text-xs">
-            #${req.docrequestid}
+            #${req.id}
           </td>
 
           <td class="px-5 py-4 font-bold text-gray-700">
@@ -257,7 +285,7 @@ const loadAcceptedRequest = async () => {
         // View button
         row.querySelector(".view-btn").onclick = () => {
           openModal(
-            req.docrequestid,
+            req.id,
             req.documentType,
             req.studentFullName,
             initials,
