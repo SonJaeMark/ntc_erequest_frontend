@@ -1,6 +1,7 @@
 import {
   getPendingRequests,
   acceptDocumentRequest,
+  getAcceptedRequests,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
 
@@ -17,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ✅ IMPORTANT: use existing tbody (no HTML changes)
   const tableBody = document.querySelector("#request-pool tbody");
+  const acceptedTableBody = document.querySelector("#my-requests tbody");
 
   const sections = ["dashboard", "request-pool", "my-requests"];
 
@@ -102,6 +104,78 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Error: " + err.message);
     }
   };
+const loadAcceptedRequest = async () => {
+    const token = getAuthToken();
+    // Ensure this matches the ID in your <tbody> if you add one, or use a selector
+    const acceptedTableBody = document.querySelector("#my-requests tbody");
+    if (!token || !acceptedTableBody) return;
+
+    try {
+        const requests = await getAcceptedRequests(token);
+        acceptedTableBody.innerHTML = "";
+
+        if (!requests || requests.length === 0) {
+            acceptedTableBody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-10 text-center text-gray-500 font-medium">
+                        No accepted requests found.
+                    </td>
+                </tr>`;
+            return;
+        }
+
+        requests.forEach((req) => {
+            const row = document.createElement("tr");
+            row.className = "hover:bg-gray-50 transition-colors";
+
+            // 1. Handle Initials
+            const initials = req.studentFullName
+                ? req.studentFullName.split(" ").map(n => n[0]).join("").toUpperCase()
+                : "??";
+            
+            // 2. Format Date
+            const dateStr = req.requestedAt
+                ? new Date(req.requestedAt).toLocaleString('en-US', { 
+                    month: 'short', day: 'numeric', year: 'numeric', 
+                    hour: 'numeric', minute: '2-digit', hour12: true 
+                  }).replace(',', ' ·')
+                : "N/A";
+
+            // 3. Payment Badge Logic (Assuming req.isPaid is a boolean)
+            const paymentBadge = req.isPaid 
+                ? `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>`
+                : `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+
+            row.innerHTML = `
+                <td class="px-5 py-4 text-gray-400 font-bold text-xs">#${req.docrequestid}</td>
+                <td class="px-5 py-4 font-bold text-gray-700">${req.documentType}</td>
+                <td class="px-5 py-4">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0">
+                            ${initials}
+                        </div>
+                        <span class="font-bold text-gray-700">${req.studentFullName || "Unknown"}</span>
+                    </div>
+                </td>
+                <td class="px-5 py-4 text-gray-500">${dateStr}</td>
+                <td class="px-5 py-4">${paymentBadge}</td>
+                <td class="px-5 py-4">
+                    <div class="flex items-center gap-2">
+                        <button onclick="handleApprove('${req.docrequestid}')" class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
+                        <button onclick="handleReject('${req.docrequestid}')" class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
+                        <button onclick="openModal('${req.docrequestid}', '${req.documentType}', '${req.studentFullName}', '${initials}', '${dateStr}')"
+                            class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
+                    </div>
+                </td>
+            `;
+            acceptedTableBody.appendChild(row);
+        });
+    } catch (err) {
+        console.error("Fetch error:", err);
+        alert("Error loading requests: " + err.message);
+    }
+};
+
 
   // --- Load Request Pool ---
   const loadPoolRequests = async () => {
@@ -209,6 +283,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Init ---
   navigateTo("dashboard");
   loadPoolRequests();
+  loadAcceptedRequest();
 });
 
 

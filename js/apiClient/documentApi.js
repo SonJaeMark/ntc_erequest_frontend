@@ -44,6 +44,13 @@ export function getPendingRequests(token) {
   );
 }
 
+export function getAcceptedRequests(token) {
+  return apiRequest(
+    `/api/document-request/registrar`,
+    withAuth(token, { method: "GET" })
+  );
+}
+
 export function acceptDocumentRequest(token, payload) {
   return apiRequest(
     `/api/document-request/accept`,
