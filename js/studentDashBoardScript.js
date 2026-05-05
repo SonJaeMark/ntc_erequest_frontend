@@ -442,7 +442,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       // --- Status badge color map ---
       const statusStyles = {
         PENDING: "bg-yellow-100 text-yellow-700",
-        PAID: "bg-green-100 text-green-700",
         PROCESSING: "bg-blue-100 text-blue-700",
         WAITING_FOR_APPROVAL: "bg-purple-100 text-purple-700",
         READY_FOR_RELEASE: "bg-indigo-100 text-indigo-700",
@@ -719,10 +718,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const paidDiv = document.createElement("div");
             paidDiv.className = "text-sm text-gray-600 mb-1";
-
-            const paidStatus = document.createElement("span");
-            paidStatus.className = "font-medium text-green-600";
-            paidStatus.textContent = "PAID";
 
             const paidDetails = document.createTextNode(
               ` - ${formatDateTime(paymentInfo.paidAt)}` +
