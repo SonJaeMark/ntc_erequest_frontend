@@ -3,8 +3,10 @@ import {
   getStudentDocuments,
   getStudentRequests,
   submitDocumentRequest,
+  cancelDocumentRequest,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
+import { processPayment, checkPayment } from "./apiClient/paymentApi.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // --- Auth guard: requires STUDENT role ---
@@ -24,6 +26,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const paymentModalClose = document.getElementById("payment-modal-close");
   const paymentMethodSelect = document.getElementById("payment-method");
   const paymentConfirmBtn = document.getElementById("payment-confirm-btn");
+  const referenceNumberGroup = document.getElementById("reference-number-group");
+  const referenceNumberInput = document.getElementById("reference-number");
 
   const sections = ['dashboard', 'request-document', 'my-requests'];
   let activePaymentRequest = null;
@@ -41,19 +45,34 @@ document.addEventListener("DOMContentLoaded", async () => {
       return email.split("@")[0] || "Student";
   };
 
-  const openPaymentModal = (request, triggerButton) => {
+  const openPaymentModal = async (request, triggerButton) => {
       if (!paymentModal) return;
+
+      // ✅ Use checkPayment to see if there's already an unvalidated payment
+      try {
+          const token = getAuthToken();
+          const paymentInfo = await checkPayment(token, request.id);
+          if (paymentInfo && paymentInfo.isPaid && !paymentInfo.validated) {
+              alert("You have already submitted a payment for this request. It is currently waiting for registrar validation.");
+              return;
+          }
+      } catch (err) {
+          console.error("Error checking payment status:", err);
+      }
 
       activePaymentRequest = {
           id: request.id,
           documentType: request.documentType,
           paymentMethod: "",
+          referenceNumber: "",
       };
       lastPaymentTrigger = triggerButton;
 
       if (paymentModalTitle) paymentModalTitle.textContent = `${formatLabel(request.documentType)} Payment`;
       if (paymentRequestId) paymentRequestId.textContent = `Request ID: ${request.id}`;
       if (paymentMethodSelect) paymentMethodSelect.value = "";
+      if (referenceNumberInput) referenceNumberInput.value = "";
+      if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
       if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
 
       paymentModal.classList.remove("hidden");
@@ -68,6 +87,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.body.classList.remove("overflow-hidden");
       activePaymentRequest = null;
       if (paymentMethodSelect) paymentMethodSelect.value = "";
+      if (referenceNumberInput) referenceNumberInput.value = "";
+      if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
       if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
 
       if (lastPaymentTrigger) {
@@ -191,9 +212,38 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   if (paymentConfirmBtn) {
-      paymentConfirmBtn.addEventListener("click", () => {
+      paymentConfirmBtn.addEventListener("click", async () => {
           if (!activePaymentRequest || !activePaymentRequest.paymentMethod) return;
-          console.log("Payment method handler placeholder:", activePaymentRequest);
+          
+          const token = getAuthToken();
+          if (!token) {
+              alert("Session expired. Please log in again.");
+              window.location.href = "index.html";
+              return;
+          }
+
+          const payload = {
+              paymentMethod: activePaymentRequest.paymentMethod,
+              documentRequestId: activePaymentRequest.id,
+              referenceNumber: referenceNumberInput?.value || null
+          };
+
+          try {
+              paymentConfirmBtn.disabled = true;
+              paymentConfirmBtn.textContent = "Processing...";
+
+              await processPayment(token, payload);
+              
+              alert("Payment submitted successfully! Waiting for validation.");
+              closePaymentModal();
+              await loadDocumentRequests(); // Refresh list to show updated status
+          } catch (error) {
+              console.error("Payment error:", error);
+              alert("Failed to process payment: " + error.message);
+          } finally {
+              paymentConfirmBtn.disabled = false;
+              paymentConfirmBtn.textContent = "Confirm Payment Method";
+          }
       });
   }
 
@@ -201,9 +251,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       paymentMethodSelect.addEventListener("change", () => {
           if (!activePaymentRequest) return;
 
-          activePaymentRequest.paymentMethod = paymentMethodSelect.value;
+          const method = paymentMethodSelect.value;
+          activePaymentRequest.paymentMethod = method;
+
+          // Show/hide reference number field
+          if (referenceNumberGroup) {
+              if (method && method !== "CASH") {
+                  referenceNumberGroup.classList.remove("hidden");
+              } else {
+                  referenceNumberGroup.classList.add("hidden");
+                  if (referenceNumberInput) referenceNumberInput.value = "";
+              }
+          }
+
           if (paymentConfirmBtn) {
-              paymentConfirmBtn.disabled = !paymentMethodSelect.value;
+              paymentConfirmBtn.disabled = !method;
           }
       });
   }
@@ -264,8 +326,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     return message;
   };
 
-  const canPayRequest = (status) =>
-    ["PENDING", "PROCESSING"].includes(String(status ?? "").toUpperCase());
+  const canPayRequest = (request) =>
+    ["PENDING", "PROCESSING"].includes(String(request.status ?? "").toUpperCase()) && !request.isPaid;
 
   const canCancelRequest = (status) =>
     String(status ?? "").toUpperCase() === "PENDING";
@@ -348,7 +410,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       // --- Status badge color map ---
       const statusStyles = {
         PENDING:    'bg-yellow-100 text-yellow-700',
+        PAID:       'bg-green-100 text-green-700',
         PROCESSING: 'bg-blue-100 text-blue-700',
+        READY_FOR_RELEASE: 'bg-indigo-100 text-indigo-700',
         COMPLETED:  'bg-green-100 text-green-700',
         Completed:  'bg-green-100 text-green-700',
         REJECTED:   'bg-red-100 text-red-700',
@@ -421,26 +485,31 @@ document.addEventListener("DOMContentLoaded", async () => {
           cancelButton.dataset.cancelButton = "true";
           cancelButton.className = "hidden rounded-lg border border-red-200 px-3 py-1.5 text-sm font-bold text-red-600 transition-colors hover:bg-red-50 active:scale-[0.98]";
           cancelButton.textContent = "Cancel";
-          cancelButton.addEventListener("click", (event) => {
+          cancelButton.addEventListener("click", async (event) => {
             event.stopPropagation();
 
-            const shouldCancel = confirm("Cancel this document request?");
+            const shouldCancel = confirm("Are you sure you want to cancel this document request?");
             if (!shouldCancel) return;
 
-            // TODO: Replace this UI-only placeholder with the cancel request API call once documentApi.js is ready.
-            request.status = "CANCELLED";
-            statusBadge.textContent = "CANCELLED";
-            statusBadge.className = `px-3 py-1 rounded-full text-sm font-bold ${getStatusStyle(request.status)}`;
-            payButton.classList.add("hidden");
-            cancelButton.classList.add("hidden");
-            console.log("Cancel request placeholder:", {
-              requestId: request.id,
-              status: request.status,
-            });
+            try {
+              const token = getAuthToken();
+              if (!token) return;
+
+              await cancelDocumentRequest(token, request.id);
+              
+              alert("Request cancelled successfully.");
+              
+              // Refresh the list to show updated status
+              await loadDocumentRequests();
+              
+            } catch (error) {
+              console.error("Error cancelling request:", error);
+              alert("Failed to cancel request: " + error.message);
+            }
           });
 
           statusGroup.append(statusBadge);
-          if (canPayRequest(request.status)) {
+          if (canPayRequest(request)) {
             statusGroup.append(payButton);
           }
           if (canCancelRequest(request.status)) {
@@ -467,7 +536,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             // If it was hidden, open it and load data
             if (isHidden) {
               logsContainer.classList.remove('hidden');
-              if (canPayRequest(request.status)) {
+              if (canPayRequest(request)) {
                 payButton.classList.remove('hidden');
               }
               if (canCancelRequest(request.status)) {

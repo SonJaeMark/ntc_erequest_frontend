@@ -5,6 +5,7 @@ import {
   processDocumentRequest,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
+import { checkPayment } from "./apiClient/paymentApi.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   requireRole(["REGISTRAR"]);
@@ -129,7 +130,8 @@ const loadAcceptedRequest = async () => {
             return;
         }
 
-        requests.forEach((req) => {
+        // --- Step 3: Render each request and fetch payment status if needed ---
+        for (const req of requests) {
             const row = document.createElement("tr");
             row.className = "hover:bg-gray-50 transition-colors";
 
@@ -146,8 +148,9 @@ const loadAcceptedRequest = async () => {
                   }).replace(',', ' ·')
                 : "N/A";
 
-            // 3. Payment Badge Logic (Assuming req.isPaid is a boolean)
-            const paymentBadge = req.isPaid 
+            // 3. Payment Badge Logic
+            // Default to Unpaid or basic Paid status from request object
+            let paymentBadge = req.isPaid 
                 ? `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>`
                 : `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
 
@@ -163,7 +166,9 @@ const loadAcceptedRequest = async () => {
                     </div>
                 </td>
                 <td class="px-5 py-4 text-gray-500">${dateStr}</td>
-                <td class="px-5 py-4">${paymentBadge}</td>
+                <td class="px-5 py-4 payment-status-cell">
+                    ${paymentBadge}
+                </td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
                         <button class="approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
@@ -187,8 +192,26 @@ const loadAcceptedRequest = async () => {
             };
 
             acceptedTableBody.appendChild(row);
-        });
-    } catch (err) {
+ 
+             // 4. Detailed Payment Check (Async)
+             const statusCell = row.querySelector(".payment-status-cell");
+             checkPayment(token, req.id)
+                 .then(paymentInfo => {
+                     if (paymentInfo && paymentInfo.isPaid && paymentInfo.validated) {
+                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validated</span>`;
+                     } else if (paymentInfo && paymentInfo.isPaid && !paymentInfo.validated) {
+                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending Validation</span>`;
+                     } else {
+                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                     }
+                 })
+                 .catch(err => {
+                     console.error(`Error checking payment for request ${req.id}:`, err);
+                     // If 404 or error, assume unpaid
+                     statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                 });
+         }
+     } catch (err) {
         console.error("Fetch error:", err);
         alert("Error loading requests: " + err.message);
     }
@@ -197,6 +220,20 @@ const loadAcceptedRequest = async () => {
   const handleApprove = async (rec) => {
     const token = getAuthToken();
     if (!token) return;
+
+    // ✅ Use checkPayment to verify if the document is actually paid and validated
+    try {
+      const paymentInfo = await checkPayment(token, rec.id);
+      if (!paymentInfo || !paymentInfo.isPaid || !paymentInfo.validated) {
+        const proceed = confirm("Warning: Payment is not yet fully validated. Proceed with approval anyway?");
+        if (!proceed) return;
+      }
+    } catch (err) {
+      console.error("Error checking payment status:", err);
+      const proceed = confirm("Could not verify payment status. Proceed with approval anyway?");
+      if (!proceed) return;
+    }
+
     const registrarId = sessionStorage.getItem("userId");
     const payload = {
       id: rec.id,

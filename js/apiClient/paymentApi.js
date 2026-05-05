@@ -51,3 +51,13 @@ export function processPayment(token, data) {
 export function getPendingPayments(token) {
   return apiRequest("/api/payments/pending", withAuth(token, { method: "GET" }));
 }
+
+/**
+ * Checks the payment status for a specific document request ID.
+ * @param {string} token - JWT access token.
+ * @param {number} documentRequestId - ID of the document request to check.
+ * @returns {Promise} - PaymentResponseDTO
+ */
+export function checkPayment(token, documentRequestId) {
+  return apiRequest(`/api/payments/check-payment/${documentRequestId}`, withAuth(token, { method: "GET" }));
+}
