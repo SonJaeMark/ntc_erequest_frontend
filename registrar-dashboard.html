@@ -5,14 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NTC eRequest | Registrar Dashboard</title>
 
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/auth-guard.js"></script>
 
-    <!-- ============================================================ -->
+
+      <!-- ============================================================ -->
     <!-- MOBILE MENU ANIMATION -->
     <!-- ============================================================ -->
     <style>
@@ -28,6 +31,7 @@
         }
     </style>
 
+
     <script>
         tailwind.config = {
             theme: {
@@ -40,61 +44,270 @@
         }
     </script>
 
+
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body>
+
 
     <!-- ============================================================ -->
     <!-- NAVBAR -->
     <!-- ============================================================ -->
     <nav class="bg-white border-b border-gray-200 shadow-sm px-4 py-3">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+
             <div class="flex items-center gap-2">
                 <div class="bg-blue-600 text-white font-black text-sm px-2.5 py-1.5 rounded-lg tracking-tight">NTC</div>
-                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight">National Teachers College | Registrar</span>
+                <span class="text-blue-900 font-black text-base md:text-lg tracking-tight hidden sm:block">National Teachers College</span>
+                <span class="text-blue-900 font-black text-base tracking-tight sm:hidden">NTC</span>
             </div>
+
+
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#dashboard" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Dashboard</a>
+                <a href="#request-pool" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">Request Pool</a>
+                <a href="#my-requests" class="nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors">My Requests</a>
+            </div>
+
+
             <div class="flex items-center gap-3">
                 <span class="text-sm text-gray-600 hidden sm:block">
                     Hi, <span id="navbar-firstname" class="font-bold text-blue-900"></span>
                 </span>
-                <button id="logout-btn" class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors">
+                <button id="logout-btn"
+                    class="hidden md:block text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg transition-colors active:transform active:scale-[0.98]">
+                    Logout
+                </button>
+                <button id="hamburger-btn"
+                    class="md:hidden flex flex-col gap-1.5 p-1"
+                    aria-label="Toggle navigation menu">
+                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
+                    <span class="block w-5 h-0.5 bg-gray-700 transition-all" aria-hidden="true"></span>
+                </button>
+            </div>
+
+
+        </div>
+
+
+        <div id="mobile-menu" class="md:hidden border-t border-gray-100">
+            <div class="flex flex-col gap-1 pt-3 pb-2">
+                <span class="text-sm text-gray-600 px-2 py-1.5">
+                    Hi, <span id="navbar-firstname-mobile" class="font-bold text-blue-900"></span>
+                </span>
+                <a href="#dashboard" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Dashboard</a>
+                <a href="#request-pool" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">Request Pool</a>
+                <a href="#my-requests" class="nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors">My Requests</a>
+                <button id="logout-btn-mobile"
+                    class="text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg transition-colors mt-1 active:transform active:scale-[0.98]">
                     Logout
                 </button>
             </div>
         </div>
     </nav>
 
-    <!-- ============================================================ -->
-    <!-- POOL REQUESTS SECTION -->
-    <!-- ============================================================ -->
-    <main class="max-w-7xl mx-auto px-4 py-8">
-        <header class="mb-8">
-            <h2 class="text-3xl font-black text-blue-900 tracking-tight">Pool Requests</h2>
-            <p class="text-gray-500">Manage and process student document requests</p>
-        </header>
 
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+    <!-- ============================================================ -->
+    <!-- TABLE -->
+    <!-- ============================================================ -->
+    <section id="request-pool" class="hidden max-w-7xl mx-auto px-4 py-8">
+
+
+        <h1 class="text-xl font-black text-gray-800 mb-5 tracking-tight">Document Pool</h1>
+
+
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-sm">
                     <thead>
-                        <tr class="bg-gray-50 border-b border-gray-100">
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Student Name</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Document Type</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Purpose</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date Requested</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                        <tr class="border-b border-gray-200 bg-gray-50">
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-28">ID</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Document Type</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Requested At</th>
+                            <th class="text-middle text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-48">Action</th>
                         </tr>
                     </thead>
-                    <tbody id="pool-requests-table-body" class="divide-y divide-gray-100">
-                        <!-- Requests will be loaded here -->
-                        <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">Loading requests...</td>
+                    <tbody class="divide-y divide-gray-100">
+
+
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-001</td>
+                            <td class="px-5 py-4 font-bold text-gray-700">Transcript of Records</td>
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0">MA</div>
+                                    <span class="font-bold text-gray-700">Maria Aquino</span>
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-gray-500">Apr 30, 2026 · 9:14 AM</td>
+                            <td class="px-5 py-4 text-right">
+                                <div class="flex items-center justify-end gap-2">
+                                    <button class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">Accept</button>
+                                    <!-- ✅ FIX: onclick added here -->
+                                    <button onclick="openModal('REQ-001', 'Transcript of Records', 'Maria Aquino', 'MA', 'Apr 30, 2026 · 9:14 AM')"
+                                        class="text-sm font-bold text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg transition-all active:scale-95">View</button>
+                                </div>
+                            </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
-    </main>
+
+
+    </section>
+
+
+    <section id="my-requests" class="hidden max-w-7xl mx-auto px-4 py-8">
+        
+        <h1 class="text-xl font-black text-gray-800 mb-5 tracking-tight">Requests</h1>
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-gray-200 bg-gray-50">
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-28">ID</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Document Type</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Requested At</th>
+                            <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Payment Status</th>
+                            <th class="text-middle text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 w-48">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+
+
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-001</td>
+                            <td class="px-5 py-4 font-bold text-gray-700">Transcript of Records</td>
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0">MA</div>
+                                    <span class="font-bold text-gray-700">Maria Aquino</span>
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-gray-500">Apr 30, 2026 · 9:14 AM</td>
+
+
+                            <!-- ✅ Payment Status Column -->
+                            <td class="px-5 py-4">
+                                <div class="flex gap-2">
+                                    <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Paid</span>
+                                </div>
+                            </td>
+       
+                            <!-- ✅ Action Column -->
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2">
+                                    <button class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
+                                    <button class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
+                                    <button onclick="openModal('REQ-001', 'Transcript of Records', 'Maria Aquino', 'MA', 'Apr 30, 2026 · 9:14 AM')"
+                                        class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
+                                </div>
+                            </td>
+
+
+                            <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-5 py-4 text-gray-400 font-bold text-xs">#REQ-002</td>
+                            <td class="px-5 py-4 font-bold text-gray-700">Certificate of Enrollment</td>
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black flex-shrink-0">JR</div>
+                                    <span class="font-bold text-gray-700">Jose Reyes</span>
+                                </div>
+                            </td>
+                            <td class="px-5 py-4 text-gray-500">May 1, 2026 · 2:45 PM</td>
+                            <td class="px-5 py-4">
+                                <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>
+                            </td>
+
+
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-2">
+                                    <button class="text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
+                                    <button class="text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
+                                    <button onclick="openModal('REQ-001', 'Transcript of Records', 'Maria Aquino', 'MA', 'Apr 30, 2026 · 9:14 AM')"
+                                        class="text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
+                                </div>
+                            </td>
+                        </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ============================================================ -->
+    <!-- SECTION: DASHBOARD -->
+    <!-- ============================================================ -->
+    <section id="dashboard" class="hidden">
+        <div class="max-w-7xl mx-auto px-4 py-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard</h2>
+            <p class="text-gray-600">Welcome to your dashboard! Here you can view your document requests and their statuses.</p>
+        </div>
+    </section>
+
+
+    <!-- ============================================================ -->
+    <!-- MODAL -->
+    <!-- ============================================================ -->
+    <div id="modal-overlay"
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden px-4"
+        onclick="handleOverlayClick(event)">
+
+
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+
+
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h2 class="text-base font-black text-gray-800 tracking-tight">Request Details</h2>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold leading-none">&times;</button>
+            </div>
+
+
+            <!-- Modal Body -->
+            <div class="px-6 py-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">ID</span>
+                    <span id="modal-id" class="text-sm font-bold text-gray-500"></span>
+                </div>
+                <hr class="border-gray-100">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Document Type</span>
+                    <span id="modal-doctype" class="text-sm font-bold text-gray-700"></span>
+                </div>
+                <hr class="border-gray-100">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Full Name</span>
+                    <div class="flex items-center gap-2">
+                        <div id="modal-avatar" class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-black flex-shrink-0"></div>
+                        <span id="modal-name" class="text-sm font-bold text-gray-700"></span>
+                    </div>
+                </div>
+                <hr class="border-gray-100">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Requested At</span>
+                    <span id="modal-date" class="text-sm text-gray-500"></span>
+                </div>
+            </div>
+
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-2">
+                <button onclick="closeModal()"
+                    class="text-sm font-bold text-gray-500 border border-gray-300 hover:bg-gray-50 px-4 py-2 rounded-lg transition-all active:scale-95">
+                    Close
+                </button>
+                <button class="text-sm font-bold text-white bg-green-500 hover:bg-green-600 px-5 py-2 rounded-lg transition-all active:scale-95">
+                    Accept
+                </button>
+            </div>
+
+
+        </div>
+    </div>
 
     <!-- ============================================================ -->
     <!-- SCRIPTS -->

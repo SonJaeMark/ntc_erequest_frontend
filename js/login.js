@@ -55,9 +55,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
-
+    const payload = { email, password };
     try {
-      const data = await login(email, password);
+      const data = await login(payload);
 
       if (!data || !data.accessToken) {
         throw new Error("Invalid response from server. Please try again.");
