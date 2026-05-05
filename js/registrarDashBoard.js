@@ -49,6 +49,28 @@ document.addEventListener("DOMContentLoaded", () => {
       : "approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95";
   };
 
+  const renderRequestBadges = (paymentBadge, status, showStatusBadge = true) => {
+    const badges = [paymentBadge];
+
+    if (!showStatusBadge) {
+      return `<div class="flex flex-wrap gap-2">${badges.join("")}</div>`;
+    }
+
+    if (status === "RELEASED") {
+      badges.push(
+        `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Released</span>`
+      );
+    }
+    
+    if (status === "READY_FOR_RELEASE") {
+      badges.push(
+        `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-indigo-100 text-indigo-700">Ready To Release</span>`
+      );
+    }
+
+    return `<div class="flex flex-wrap gap-2">${badges.join("")}</div>`;
+  };
+
   const logout = () => {
     apiLogout(
       sessionStorage.getItem("ntc_access_token"),
@@ -183,7 +205,7 @@ const loadAcceptedRequest = async () => {
                 </td>
                 <td class="px-5 py-4 text-gray-500">${dateStr}</td>
                 <td class="px-5 py-4 payment-status-cell">
-                    ${paymentBadge}
+                    ${renderRequestBadges(paymentBadge, req.status, req.isPaid)}
                 </td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
@@ -213,21 +235,33 @@ const loadAcceptedRequest = async () => {
              checkPayment(token, req.id)
                  .then(paymentInfo => {
                      if (paymentInfo && paymentInfo.isPaid && paymentInfo.validated) {
-                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validated</span>`;
+                         statusCell.innerHTML = renderRequestBadges(
+                           `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validated</span>`,
+                          req.status,
+                          true
+                         );
                          setApproveButtonState(approveBtn, {
                            disabled: true,
                            label: "Validated",
                            title: "Payment is already validated.",
                          });
                      } else if (paymentInfo && paymentInfo.isPaid && !paymentInfo.validated) {
-                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending Validation</span>`;
+                         statusCell.innerHTML = renderRequestBadges(
+                           `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending Validation</span>`,
+                          req.status,
+                          true
+                         );
                          setApproveButtonState(approveBtn, {
                            disabled: false,
                            label: "Approve",
                            title: "Approve and validate this payment.",
                          });
                      } else {
-                         statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                         statusCell.innerHTML = renderRequestBadges(
+                           `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`,
+                          req.status,
+                          false
+                         );
                          setApproveButtonState(approveBtn, {
                            disabled: true,
                            label: "Approve",
@@ -238,7 +272,11 @@ const loadAcceptedRequest = async () => {
                  .catch(err => {
                      console.error(`Error checking payment for request ${req.id}:`, err);
                      // If 404 or error, assume unpaid
-                     statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                     statusCell.innerHTML = renderRequestBadges(
+                       `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`,
+                      req.status,
+                      false
+                     );
                      setApproveButtonState(approveBtn, {
                        disabled: true,
                        label: "Approve",
