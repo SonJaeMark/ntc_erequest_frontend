@@ -2,10 +2,9 @@ import {
   getPendingRequests,
   acceptDocumentRequest,
   getRegistrarRequests,
-  processDocumentRequest,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
-import { checkPayment } from "./apiClient/paymentApi.js";
+import { checkPayment, confirmPayment } from "./apiClient/paymentApi.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   requireRole(["REGISTRAR"]);
@@ -32,6 +31,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const getAuthToken = () =>
     sessionStorage.getItem("ntc_access_token");
+
+  const setApproveButtonState = (button, options = {}) => {
+    if (!button) return;
+
+    const {
+      disabled = false,
+      label = "Approve",
+      title = "",
+    } = options;
+
+    button.disabled = disabled;
+    button.textContent = label;
+    button.title = title;
+    button.className = disabled
+      ? "approve-btn text-xs font-bold text-white bg-gray-300 cursor-not-allowed px-3 py-1.5 rounded-lg transition-all"
+      : "approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95";
+  };
 
   const logout = () => {
     apiLogout(
@@ -171,16 +187,15 @@ const loadAcceptedRequest = async () => {
                 </td>
                 <td class="px-5 py-4">
                     <div class="flex items-center gap-2">
-                        <button class="approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Approve</button>
-                        <button class="reject-btn text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">Reject</button>
+                        <button class="approve-btn text-xs font-bold text-white bg-gray-300 cursor-not-allowed px-3 py-1.5 rounded-lg transition-all" disabled>Approve</button>
                         <button class="view-btn text-xs font-bold text-white bg-blue-500 hover:bg-blue-600 px-3 py-1.5 rounded-lg transition-all active:scale-95">View</button>
                     </div>
                 </td>
             `;
 
             // Add event listeners
-            row.querySelector(".approve-btn").onclick = () => handleApprove(req);
-            row.querySelector(".reject-btn").onclick = () => handleReject(req);
+            const approveBtn = row.querySelector(".approve-btn");
+            approveBtn.onclick = () => handleApprove(req);
             row.querySelector(".view-btn").onclick = () => {
               openModal(
                 req.id,
@@ -199,16 +214,36 @@ const loadAcceptedRequest = async () => {
                  .then(paymentInfo => {
                      if (paymentInfo && paymentInfo.isPaid && paymentInfo.validated) {
                          statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-green-100 text-green-700">Validated</span>`;
+                         setApproveButtonState(approveBtn, {
+                           disabled: true,
+                           label: "Validated",
+                           title: "Payment is already validated.",
+                         });
                      } else if (paymentInfo && paymentInfo.isPaid && !paymentInfo.validated) {
                          statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending Validation</span>`;
+                         setApproveButtonState(approveBtn, {
+                           disabled: false,
+                           label: "Approve",
+                           title: "Approve and validate this payment.",
+                         });
                      } else {
                          statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                         setApproveButtonState(approveBtn, {
+                           disabled: true,
+                           label: "Approve",
+                           title: "Payment must be completed before approval.",
+                         });
                      }
                  })
                  .catch(err => {
                      console.error(`Error checking payment for request ${req.id}:`, err);
                      // If 404 or error, assume unpaid
                      statusCell.innerHTML = `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-red-100 text-red-600">Unpaid</span>`;
+                     setApproveButtonState(approveBtn, {
+                       disabled: true,
+                       label: "Approve",
+                       title: "Payment status could not be verified.",
+                     });
                  });
          }
      } catch (err) {
@@ -221,52 +256,12 @@ const loadAcceptedRequest = async () => {
     const token = getAuthToken();
     if (!token) return;
 
-    // ✅ Use checkPayment to verify if the document is actually paid and validated
     try {
-      const paymentInfo = await checkPayment(token, rec.id);
-      if (!paymentInfo || !paymentInfo.isPaid || !paymentInfo.validated) {
-        const proceed = confirm("Warning: Payment is not yet fully validated. Proceed with approval anyway?");
-        if (!proceed) return;
-      }
+      await confirmPayment(token, rec.id);
+      alert("Payment approved successfully!");
+      loadAcceptedRequest();
     } catch (err) {
-      console.error("Error checking payment status:", err);
-      const proceed = confirm("Could not verify payment status. Proceed with approval anyway?");
-      if (!proceed) return;
-    }
-
-    const registrarId = sessionStorage.getItem("userId");
-    const payload = {
-      id: rec.id,
-      status: "READY_FOR_RELEASE", // Standard status from DTO docstring
-      remarks: "Approved and ready for release",
-      registrarId: Number(registrarId),
-    };
-    console.log("Approving payload:", payload);
-    try {
-      await processDocumentRequest(token, payload);
-      alert("Request approved and ready for release!");
-      loadAcceptedRequest(); // refresh my requests
-    } catch (err) {
-      alert("Error: " + err.message);
-    }
-  };
-
-  const handleReject = async (rec) => {
-    const token = getAuthToken();
-    if (!token) return;
-    const registrarId = sessionStorage.getItem("userId");
-    const payload = {
-      id: rec.id,
-      status: "REJECTED",
-      remarks: "Request rejected by registrar",
-      registrarId: Number(registrarId),
-    };
-    console.log("Rejecting payload:", payload);
-    try {
-      await processDocumentRequest(token, payload);
-      alert("Request rejected!");
-      loadAcceptedRequest(); // refresh my requests
-    } catch (err) {
+      console.error("Error approving payment:", err);
       alert("Error: " + err.message);
     }
   };
