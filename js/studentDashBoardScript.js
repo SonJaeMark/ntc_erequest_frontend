@@ -433,8 +433,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       String(request.status ?? "").toUpperCase()
     ) && !request.isPaid;
 
-  const canCancelRequest = (status) =>
-    String(status ?? "").toUpperCase() === "PENDING";
+  const canCancelRequest = (request) =>
+    String(request.status ?? "").toUpperCase() === "PENDING" && !request.isPaid;
 
   // ============================================================
   // LOAD DOCUMENT TYPES
