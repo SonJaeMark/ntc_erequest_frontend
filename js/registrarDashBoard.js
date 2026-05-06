@@ -2,6 +2,7 @@ import {
   getPendingRequests,
   acceptDocumentRequest,
   getRegistrarRequests,
+  processDocumentRequest,
 } from "./apiClient/documentApi.js";
 import { logout as apiLogout } from "./apiClient/authApi.js";
 import { checkPayment, confirmPayment } from "./apiClient/paymentApi.js";
@@ -44,9 +45,16 @@ document.addEventListener("DOMContentLoaded", () => {
     button.disabled = disabled;
     button.textContent = label;
     button.title = title;
-    button.className = disabled
-      ? "approve-btn text-xs font-bold text-white bg-gray-300 cursor-not-allowed px-3 py-1.5 rounded-lg transition-all"
-      : "approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95";
+
+    if (label === "Release") {
+      button.className = disabled
+        ? "approve-btn text-xs font-bold text-white bg-gray-300 cursor-not-allowed px-3 py-1.5 rounded-lg transition-all"
+        : "approve-btn text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition-all active:scale-95";
+    } else {
+      button.className = disabled
+        ? "approve-btn text-xs font-bold text-white bg-gray-300 cursor-not-allowed px-3 py-1.5 rounded-lg transition-all"
+        : "approve-btn text-xs font-bold text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded-lg transition-all active:scale-95";
+    }
   };
 
   const renderRequestBadges = (paymentBadge, status, showStatusBadge = true) => {
@@ -217,7 +225,13 @@ const loadAcceptedRequest = async () => {
 
             // Add event listeners
             const approveBtn = row.querySelector(".approve-btn");
-            approveBtn.onclick = () => handleApprove(req);
+            approveBtn.onclick = () => {
+              if (approveBtn.textContent === "Release") {
+                handleRelease(req);
+              } else {
+                handleApprove(req);
+              }
+            };
             row.querySelector(".view-btn").onclick = () => {
               openModal(
                 req.id,
@@ -240,11 +254,19 @@ const loadAcceptedRequest = async () => {
                           req.status,
                           true
                          );
-                         setApproveButtonState(approveBtn, {
-                           disabled: true,
-                           label: "Validated",
-                           title: "Payment is already validated.",
-                         });
+                         if (req.status === "RELEASED") {
+                           setApproveButtonState(approveBtn, {
+                             disabled: true,
+                             label: "Released",
+                             title: "Document has been released.",
+                           });
+                         } else {
+                           setApproveButtonState(approveBtn, {
+                             disabled: false,
+                             label: "Release",
+                             title: "Release this document to the student.",
+                           });
+                         }
                      } else if (paymentInfo && paymentInfo.isPaid && !paymentInfo.validated) {
                          statusCell.innerHTML = renderRequestBadges(
                            `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700">Pending Validation</span>`,
@@ -300,6 +322,32 @@ const loadAcceptedRequest = async () => {
       loadAcceptedRequest();
     } catch (err) {
       console.error("Error approving payment:", err);
+      alert("Error: " + err.message);
+    }
+  };
+
+  const handleRelease = async (req) => {
+    const token = getAuthToken();
+    if (!token) return;
+
+    const payload = {
+      id: req.id,
+      purpose: req.purpose,
+      documentType: req.documentType,
+      documentId: req.documentId,
+      additionalDetails: req.additionalDetails,
+      remarks: "Document released by registrar",
+      status: "RELEASED",
+      studentId: req.studentId,
+      registrarId: req.registrarId,
+    };
+
+    try {
+      await processDocumentRequest(token, payload);
+      alert("Document released successfully!");
+      loadAcceptedRequest();
+    } catch (err) {
+      console.error("Error releasing document:", err);
       alert("Error: " + err.message);
     }
   };
