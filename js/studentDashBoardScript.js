@@ -34,6 +34,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   const sections = ["dashboard", "request-document", "my-requests"];
   let activePaymentRequest = null;
   let lastPaymentTrigger = null;
+  let paymentGatewayWindow = null;
+  let pendingGatewayPayment = null;
+  let paymentGatewayPollId = null;
 
   // --- Helpers ---
   /**
@@ -103,6 +106,52 @@ document.addEventListener("DOMContentLoaded", async () => {
       lastPaymentTrigger.focus();
       lastPaymentTrigger = null;
     }
+  };
+
+  const clearPendingGatewayPayment = () => {
+    pendingGatewayPayment = null;
+
+    if (paymentGatewayPollId) {
+      window.clearInterval(paymentGatewayPollId);
+      paymentGatewayPollId = null;
+    }
+
+    if (paymentGatewayWindow?.closed) {
+      paymentGatewayWindow = null;
+    }
+  };
+
+  const openPaymentGatewayWindow = (request, payload) => {
+    const params = new URLSearchParams({
+      requestId: String(request.id),
+      documentType: formatLabel(request.documentType),
+      paymentMethod: payload.paymentMethod,
+    });
+
+    paymentGatewayWindow = window.open(
+      `payment-gateway-sim.html?${params.toString()}`,
+      "ntcPaymentGateway",
+      "width=460,height=720,resizable=no,scrollbars=no"
+    );
+
+    if (!paymentGatewayWindow) {
+      clearPendingGatewayPayment();
+      return false;
+    }
+
+    pendingGatewayPayment = { payload };
+
+    if (paymentGatewayPollId) {
+      window.clearInterval(paymentGatewayPollId);
+    }
+
+    paymentGatewayPollId = window.setInterval(() => {
+      if (paymentGatewayWindow?.closed) {
+        clearPendingGatewayPayment();
+      }
+    }, 500);
+
+    return true;
   };
 
   const logout = async () => {
@@ -245,24 +294,54 @@ document.addEventListener("DOMContentLoaded", async () => {
         referenceNumber: referenceNumberInput?.value || null,
       };
 
-      try {
-        paymentConfirmBtn.disabled = true;
-        paymentConfirmBtn.textContent = "Processing...";
+      paymentConfirmBtn.disabled = true;
+      paymentConfirmBtn.textContent = "Opening Gateway...";
 
-        await processPayment(token, payload);
+      const popupOpened = openPaymentGatewayWindow(activePaymentRequest, payload);
 
-        alert("Payment submitted successfully! Waiting for validation.");
-        closePaymentModal();
-        await loadDocumentRequests(); // Refresh list to show updated status
-      } catch (error) {
-        console.error("Payment error:", error);
-        alert("Failed to process payment: " + error.message);
-      } finally {
+      if (!popupOpened) {
+        alert("Popup blocked. Please allow popups and try again.");
         paymentConfirmBtn.disabled = false;
         paymentConfirmBtn.textContent = "Confirm Payment Method";
+        return;
       }
+
+      closePaymentModal();
     });
   }
+
+  window.addEventListener("message", async (event) => {
+    if (!event.data || event.data.type !== "NTC_PAYMENT_GATEWAY_SUCCESS") {
+      return;
+    }
+
+    if (!pendingGatewayPayment) {
+      return;
+    }
+
+    const paymentToProcess = pendingGatewayPayment;
+    clearPendingGatewayPayment();
+
+    const token = getAuthToken();
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+      await processPayment(token, paymentToProcess.payload);
+      alert("Payment submitted successfully! Waiting for validation.");
+      await loadDocumentRequests();
+      navigateTo("dashboard");
+      paymentGatewayWindow?.close();
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Failed to process payment: " + error.message);
+    } finally {
+      paymentGatewayWindow = null;
+    }
+  });
 
   if (paymentMethodSelect) {
     paymentMethodSelect.addEventListener("change", () => {
