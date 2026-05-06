@@ -26,10 +26,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   const paymentModalClose = document.getElementById("payment-modal-close");
   const paymentMethodSelect = document.getElementById("payment-method");
   const paymentConfirmBtn = document.getElementById("payment-confirm-btn");
+  const submitPaymentBtn = document.getElementById("submit-payment-btn");
   const referenceNumberGroup = document.getElementById(
     "reference-number-group"
   );
   const referenceNumberInput = document.getElementById("reference-number");
+  const generatedReferenceDisplay = document.getElementById(
+    "generated-reference-display"
+  );
+
+  if (referenceNumberInput) {
+    referenceNumberInput.addEventListener("input", () => {
+      if (!activePaymentRequest || !submitPaymentBtn) return;
+      const val = referenceNumberInput.value.trim();
+      // Enable submit button only if input matches the generated reference
+      submitPaymentBtn.disabled = val !== activePaymentRequest.referenceNumber;
+    });
+  }
 
   const sections = ["dashboard", "request-document", "my-requests"];
   let activePaymentRequest = null;
@@ -48,6 +61,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (stored && stored.trim()) return stored.trim();
     const email = sessionStorage.getItem("email") ?? "";
     return email.split("@")[0] || "Student";
+  };
+
+  /**
+   * Generates a random reference number for the payment.
+   */
+  const generateReferenceNumber = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let ref = "NTC-";
+    for (let i = 0; i < 4; i++) {
+      ref += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    ref += "-";
+    for (let i = 0; i < 4; i++) {
+      ref += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return ref;
   };
 
   const openPaymentModal = async (request, triggerButton) => {
@@ -71,7 +100,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       id: request.id,
       documentType: request.documentType,
       paymentMethod: "",
-      referenceNumber: "",
+      referenceNumber: generateReferenceNumber(),
     };
     lastPaymentTrigger = triggerButton;
 
@@ -82,11 +111,26 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (paymentRequestId)
       paymentRequestId.textContent = `Request ID: ${request.id}`;
     if (paymentMethodSelect) paymentMethodSelect.value = "";
-    if (referenceNumberInput) referenceNumberInput.value = "";
+    if (referenceNumberInput) {
+      referenceNumberInput.value = "";
+    }
+    if (generatedReferenceDisplay) {
+      generatedReferenceDisplay.textContent =
+        activePaymentRequest.referenceNumber;
+    }
     if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
-    if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
-
-    paymentModal.classList.remove("hidden");
+    if (paymentConfirmBtn) {
+       paymentConfirmBtn.disabled = true;
+       paymentConfirmBtn.classList.remove("hidden");
+       paymentConfirmBtn.textContent = "Confirm Payment Method";
+     }
+     if (submitPaymentBtn) {
+       submitPaymentBtn.classList.add("hidden");
+       submitPaymentBtn.disabled = true;
+       submitPaymentBtn.textContent = "Submit Payment";
+     }
+ 
+     paymentModal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
     paymentMethodSelect?.focus();
   };
@@ -100,7 +144,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (paymentMethodSelect) paymentMethodSelect.value = "";
     if (referenceNumberInput) referenceNumberInput.value = "";
     if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
-    if (paymentConfirmBtn) paymentConfirmBtn.disabled = true;
+    if (generatedReferenceDisplay) generatedReferenceDisplay.textContent = "";
+    if (paymentConfirmBtn) {
+      paymentConfirmBtn.disabled = true;
+      paymentConfirmBtn.classList.remove("hidden");
+    }
+    if (submitPaymentBtn) {
+      submitPaymentBtn.classList.add("hidden");
+      submitPaymentBtn.disabled = true;
+    }
 
     if (lastPaymentTrigger) {
       lastPaymentTrigger.focus();
@@ -126,6 +178,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       requestId: String(request.id),
       documentType: formatLabel(request.documentType),
       paymentMethod: payload.paymentMethod,
+      referenceNumber: payload.referenceNumber || "",
     });
 
     paymentGatewayWindow = window.open(
@@ -295,9 +348,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       };
 
       paymentConfirmBtn.disabled = true;
-      paymentConfirmBtn.textContent = "Opening Gateway...";
+      paymentConfirmBtn.textContent = "Gateway Opened";
 
-      const popupOpened = openPaymentGatewayWindow(activePaymentRequest, payload);
+      const popupOpened = openPaymentGatewayWindow(
+        activePaymentRequest,
+        payload
+      );
 
       if (!popupOpened) {
         alert("Popup blocked. Please allow popups and try again.");
@@ -306,7 +362,48 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      closePaymentModal();
+      // Show Submit button and Reference field if not already visible
+      if (submitPaymentBtn) submitPaymentBtn.classList.remove("hidden");
+      if (referenceNumberGroup) referenceNumberGroup.classList.remove("hidden");
+    });
+  }
+
+  if (submitPaymentBtn) {
+    submitPaymentBtn.addEventListener("click", async () => {
+      if (!activePaymentRequest || !referenceNumberInput?.value) {
+        alert("Please paste the reference number from the payment gateway.");
+        return;
+      }
+
+      const token = getAuthToken();
+      if (!token) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "index.html";
+        return;
+      }
+
+      const payload = {
+        paymentMethod: activePaymentRequest.paymentMethod,
+        documentRequestId: activePaymentRequest.id,
+        referenceNumber: referenceNumberInput.value,
+      };
+
+      submitPaymentBtn.disabled = true;
+      submitPaymentBtn.textContent = "Processing...";
+
+      try {
+        await processPayment(token, payload);
+        alert("Payment submitted successfully! Waiting for validation.");
+        await loadDocumentRequests();
+        navigateTo("dashboard");
+        closePaymentModal();
+        paymentGatewayWindow?.close();
+      } catch (error) {
+        console.error("Payment error:", error);
+        alert("Failed to process payment: " + error.message);
+        submitPaymentBtn.disabled = false;
+        submitPaymentBtn.textContent = "Submit Payment";
+      }
     });
   }
 
@@ -319,28 +416,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    const paymentToProcess = pendingGatewayPayment;
+    // Instead of auto-submitting, we just clear the pending status
+    // and let the student manually paste the reference and click submit.
     clearPendingGatewayPayment();
-
-    const token = getAuthToken();
-    if (!token) {
-      alert("Session expired. Please log in again.");
-      window.location.href = "index.html";
-      return;
-    }
-
-    try {
-      await processPayment(token, paymentToProcess.payload);
-      alert("Payment submitted successfully! Waiting for validation.");
-      await loadDocumentRequests();
-      navigateTo("dashboard");
-      paymentGatewayWindow?.close();
-    } catch (error) {
-      console.error("Payment error:", error);
-      alert("Failed to process payment: " + error.message);
-    } finally {
-      paymentGatewayWindow = null;
-    }
+    console.log("Payment gateway reported success. Waiting for manual submission.");
   });
 
   if (paymentMethodSelect) {
@@ -353,7 +432,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Show/hide reference number field
       if (referenceNumberGroup) {
         if (method && method !== "CASH") {
-          referenceNumberGroup.classList.remove("hidden");
+          // In the new flow, we don't auto-show the reference field until the gateway is opened
+          // or we can show it but keep it empty.
+          // Let's keep it hidden until "Confirm" is clicked to guide the user.
+          referenceNumberGroup.classList.add("hidden");
         } else {
           referenceNumberGroup.classList.add("hidden");
           if (referenceNumberInput) referenceNumberInput.value = "";
@@ -548,6 +630,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // --- Step 1: Fetch all requests ---
       const requests = await getStudentRequests(token);
+
+      // --- Sort requests by latest date first ---
+      if (Array.isArray(requests)) {
+        requests.sort((a, b) => {
+          const dateA = new Date(a.requestedAt || 0);
+          const dateB = new Date(b.requestedAt || 0);
+          return dateB - dateA;
+        });
+      }
+
       const container = document.getElementById("document-requests-container");
 
       if (!Array.isArray(requests)) {
