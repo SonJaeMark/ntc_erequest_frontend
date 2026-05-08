@@ -54,7 +54,9 @@ const requireRole = (allowedRoles) => {
   const isActive = sessionStorage.getItem("isActive");
 
   // --- Check if account is active ---
-  if (isActive === "false") {
+  // Ensure we check for both boolean false and string "false"
+  if (isActive === false || String(isActive) === "false") {
+    console.warn("Access denied: Account is inactive.");
     sessionStorage.clear();
     localStorage.clear();
     window.location.replace("unauthorized.html");

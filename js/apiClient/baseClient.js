@@ -1,8 +1,8 @@
 // export const BASE_URL = "https://ntc-erquest-system-1.onrender.com";
 // export const BASE_URL = "https://ntc-erquest-system-sp1-fix.onrender.com";
-export const BASE_URL = "https://ntc-erquest-system-2-xn7q.onrender.com";
+// export const BASE_URL = "https://ntc-erquest-system-2-xn7q.onrender.com";
 
-// export const BASE_URL = "http://localhost:8080"
+export const BASE_URL = "http://localhost:8080";
 
 export async function apiRequest(path, options = {}) {
   const response = await fetch(`${BASE_URL}${path}`, options);

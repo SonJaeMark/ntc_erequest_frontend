@@ -26,7 +26,11 @@ export function registerUser(data, token) {
   return apiRequest("/api/user-management/register", {
     method: "POST",
     body: JSON.stringify(data),
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
   });
 }
 
@@ -38,32 +42,22 @@ export function registerUser(data, token) {
  */
 export function toggleUserActiveStatus(token, userId) {
   return apiRequest(`/api/user-management/toggle-active/${userId}`, {
-    method: "PATCH",
+    method: "PUT",
     headers: {
+      "Accept": "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      "Authorization": `Bearer ${token}`
     }
   });
 }
 
-/**
- * Retrieves all registered users.
- * @param {string} token - JWT access token (Requires ADMIN role).
- * @returns {Promise} - List of RegisterResponseDTO objects.
- * @example
- * sample response: LoadAllUserResponseDTO
- *  "userId": 1,
- *  "email": "student1@email.com",
- *  "role": "STUDENT",
- *  "fullName": "Student 1",
- *  "isActive": true
- */
 export function getAllUsers(token) {
   return apiRequest("/api/user-management/all", {
     method: "GET",
     headers: {
+      "Accept": "application/json",
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      "Authorization": `Bearer ${token}`
     }
   });
 }

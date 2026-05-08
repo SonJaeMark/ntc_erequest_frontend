@@ -191,27 +191,42 @@ window.filterAccounts = function() { window.renderAccounts(); }
 // ── TOGGLE ACTIVATE / DEACTIVATE ──
 window.toggleStatus = async function(btn) {
     const token = getAuthToken();
-    if (!token) return;
+    if (!token) {
+        alert("Session expired. Please log in again.");
+        window.location.href = "index.html";
+        return;
+    }
 
     const id = parseInt(btn.dataset.id);
+    if (isNaN(id)) {
+        console.error("Invalid User ID:", btn.dataset.id);
+        return;
+    }
+
+    // Optional: Add a confirmation dialog for deactivation
     const isDeactivateAction = btn.textContent.trim() === 'Deactivate';
+    if (isDeactivateAction && !confirm("Are you sure you want to deactivate this account?")) {
+        return;
+    }
 
     try {
+        btn.disabled = true;
         const newStatus = await toggleUserActiveStatus(token, id);
         
         // Update local data
         const user = allUsers.find(u => u.userId === id);
         if (user) user.isActive = newStatus;
 
-        // Update UI button
-        btn.textContent = newStatus ? 'Deactivate' : 'Activate';
-        btn.className = `action-btn text-xs font-bold text-white py-1.5 rounded-lg transition-all active:scale-95 ${newStatus ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`;
-        
-        // Update status badge (need to re-render or find it)
+        // Re-render to update the row and button state
         window.renderAccounts();
+        
+        const action = newStatus ? "activated" : "deactivated";
+        console.log(`User #${id} successfully ${action}.`);
     } catch (err) {
         console.error("Error toggling status:", err);
-        alert("Error toggling user status: " + err.message);
+        alert("Error toggling user status: " + (err.message || "Unknown error"));
+    } finally {
+        btn.disabled = false;
     }
 }
 

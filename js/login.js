@@ -6,9 +6,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const isActive = sessionStorage.getItem("isActive");
 
   if (existingToken && existingRole) {
-    if (isActive === "false") {
+    if (isActive === false || String(isActive) === "false" || String(isActive) === "FALSE") {
+      console.log("Auto-login blocked: Account is inactive.");
       sessionStorage.clear();
       localStorage.clear();
+      window.location.replace("unauthorized.html");
       return;
     }
 
@@ -79,7 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("isActive", data.isActive);
 
       // --- Check if account is active ---
-      if (data.isActive === false || String(data.isActive) === "false") {
+      if (data.isActive === false || String(data.isActive) === "FALSE") {
         sessionStorage.clear();
         localStorage.clear();
         window.location.replace("unauthorized.html");
@@ -92,7 +94,12 @@ document.addEventListener("DOMContentLoaded", () => {
         window.location.replace("student-dashboard.html");
         return;
       }
-      if (role === "ADMIN" || role === "REGISTRAR") {
+      if (role === "ADMIN") {
+        window.location.replace("admin-dashboard.html");
+        return;
+      }
+
+      if (role === "REGISTRAR") {
         window.location.replace("registrar-dashboard.html");
         return;
       }
