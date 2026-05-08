@@ -3,8 +3,15 @@ import { login } from "./apiClient/authApi.js";
 document.addEventListener("DOMContentLoaded", () => {
   const existingToken = sessionStorage.getItem("ntc_access_token");
   const existingRole = sessionStorage.getItem("role");
+  const isActive = sessionStorage.getItem("isActive");
 
   if (existingToken && existingRole) {
+    if (isActive === "false") {
+      sessionStorage.clear();
+      localStorage.clear();
+      return;
+    }
+
     const role = String(existingRole).trim().toUpperCase();
     if (role === "STUDENT") {
       window.location.replace("student-dashboard.html");
@@ -69,9 +76,10 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("email", data.email);
       sessionStorage.setItem("role", data.role);
       sessionStorage.setItem("ntc_user_role", data.role);
+      sessionStorage.setItem("isActive", data.isActive);
 
       // --- Check if account is active ---
-      if (data.isActive === false) {
+      if (data.isActive === false || String(data.isActive) === "false") {
         sessionStorage.clear();
         localStorage.clear();
         window.location.replace("unauthorized.html");

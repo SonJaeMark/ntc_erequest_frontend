@@ -51,6 +51,15 @@ const isCurrentPage = (pageName) => {
 const requireRole = (allowedRoles) => {
   const currentRole = getStoredRole();
   const allowed = allowedRoles.map(normalizeRole);
+  const isActive = sessionStorage.getItem("isActive");
+
+  // --- Check if account is active ---
+  if (isActive === "false") {
+    sessionStorage.clear();
+    localStorage.clear();
+    window.location.replace("unauthorized.html");
+    return false;
+  }
 
   // --- No role found: redirect to login ---
   if (!currentRole) {
