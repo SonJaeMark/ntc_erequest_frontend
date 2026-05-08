@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("ntc_user_role", data.role);
 
       // --- Check if account is active ---
-      if (data.isActive === false) {
+      if (data.isActive === true) {
         sessionStorage.clear();
         localStorage.clear();
         window.location.replace("unauthorized.html");
