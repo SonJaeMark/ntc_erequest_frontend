@@ -416,16 +416,20 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const formatDate = (dateValue) => {
     const date = new Date(dateValue);
-    return Number.isNaN(date.getTime())
-      ? "No date available"
-      : date.toLocaleDateString();
+    if (Number.isNaN(date.getTime())) return "No date available";
+    
+    return date.toLocaleDateString('en-US', {
+      timeZone: 'Asia/Manila'
+    });
   };
 
   const formatDateTime = (dateValue) => {
     const date = new Date(dateValue);
-    return Number.isNaN(date.getTime())
-      ? "No date available"
-      : date.toLocaleString();
+    if (Number.isNaN(date.getTime())) return "No date available";
+
+    return date.toLocaleString('en-US', {
+      timeZone: 'Asia/Manila'
+    });
   };
 
   const createMessage = (text, className) => {
