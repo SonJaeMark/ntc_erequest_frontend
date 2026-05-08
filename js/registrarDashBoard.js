@@ -8,7 +8,7 @@ import { logout as apiLogout } from "./apiClient/authApi.js";
 import { checkPayment, confirmPayment } from "./apiClient/paymentApi.js";
 
 document.addEventListener("DOMContentLoaded", () => {
-  requireRole(["REGISTRAR"]);
+  if (!requireRole(["REGISTRAR"])) return;
 
   // --- Elements ---
   const firstNameEl = document.getElementById("navbar-firstname");
@@ -176,8 +176,11 @@ const loadAcceptedRequest = async () => {
             return;
         }
 
+        console.log("Rendering requests:", requests);
+
         // --- Step 3: Render each request and fetch payment status if needed ---
         for (const req of requests) {
+            console.log(`Request #${req.id} data:`, req);
             const row = document.createElement("tr");
             row.className = "hover:bg-gray-50 transition-colors";
 
@@ -187,10 +190,16 @@ const loadAcceptedRequest = async () => {
                 : "??";
             
             // 2. Format Date
-            const dateStr = req.requestedAt
-                ? new Date(req.requestedAt).toLocaleString('en-US', { 
-                    month: 'short', day: 'numeric', year: 'numeric', 
-                    hour: 'numeric', minute: '2-digit', hour12: true 
+            const rawDate = req.requestedAt || req.requested_at || req.createdAt || req.created_at;
+            console.log(`Request #${req.id} rawDate:`, rawDate);
+            const dateStr = rawDate
+                ? new Date(rawDate).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
                   }).replace(',', ' ·')
                 : "N/A";
 
@@ -386,8 +395,9 @@ const loadAcceptedRequest = async () => {
               .toUpperCase()
           : "S";
 
-        const dateStr = req.requestedAt
-          ? new Date(req.requestedAt).toLocaleString()
+        const rawDate = req.requestedAt || req.requested_at || req.createdAt || req.created_at;
+        const dateStr = rawDate
+          ? new Date(rawDate).toLocaleString()
           : "N/A";
 
         row.innerHTML = `

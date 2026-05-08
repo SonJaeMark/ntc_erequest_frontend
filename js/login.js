@@ -70,6 +70,14 @@ document.addEventListener("DOMContentLoaded", () => {
       sessionStorage.setItem("role", data.role);
       sessionStorage.setItem("ntc_user_role", data.role);
 
+      // --- Check if account is active ---
+      if (data.isActive === false) {
+        sessionStorage.clear();
+        localStorage.clear();
+        window.location.replace("unauthorized.html");
+        return;
+      }
+
       const role = String(data.role).trim().toUpperCase();
 
       if (role === "STUDENT") {

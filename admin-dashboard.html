@@ -10,7 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="js/auth-guard.js"></script>
+    <script src="js/auth-guard.js" defer></script>
 
     <style>
         #mobile-menu {
@@ -25,26 +25,17 @@
         }
 
         /* Fix table column widths so they never shift */
-        #wrap-student table,
-        #wrap-registrar table {
+        #wrap-users table {
             table-layout: fixed;
             width: 100%;
         }
 
-        /* Student table column widths */
-        #wrap-student th:nth-child(1) { width: 90px; }
-        #wrap-student th:nth-child(2) { width: 200px; }
-        #wrap-student th:nth-child(3) { width: 180px; }
-        #wrap-student th:nth-child(4) { width: 180px; }
-        #wrap-student th:nth-child(5) { width: 130px; }
-        #wrap-student th:nth-child(6) { width: 110px; }
-
-        /* Registrar table column widths */
-        #wrap-registrar th:nth-child(1) { width: 90px; }
-        #wrap-registrar th:nth-child(2) { width: 180px; }
-        #wrap-registrar th:nth-child(3) { width: 220px; }
-        #wrap-registrar th:nth-child(4) { width: 120px; }
-        #wrap-registrar th:nth-child(5) { width: 110px; }
+        /* User table column widths */
+         #wrap-users th:nth-child(1) { width: 80px; }
+         #wrap-users th:nth-child(2) { width: 200px; }
+         #wrap-users th:nth-child(3) { width: 200px; }
+         #wrap-users th:nth-child(4) { width: 100px; }
+         #wrap-users th:nth-child(5) { width: 180px; }
 
         /* Action buttons always same width */
         .action-btn {
@@ -153,7 +144,7 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
                         </svg>
-                        Acc Status
+                        User Management
                     </button>
                 </div>
 
@@ -171,7 +162,7 @@
                         <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25z"/>
                         </svg>
-                        Acc Status
+                        User Management
                     </button>
                 </div>
             </aside>
@@ -284,36 +275,19 @@
                             </select>
                         </div>
 
-                        <!-- Student Table -->
-                        <div class="overflow-x-auto" id="wrap-student">
+                        <!-- User Table -->
+                        <div class="overflow-x-auto" id="wrap-users">
                             <table class="w-full text-sm">
                                 <thead>
                                     <tr class="border-b border-gray-200 bg-gray-50">
                                         <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">ID</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Document Type</th>
+                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Email</th>
                                         <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 hidden sm:table-cell">Requested At</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Payment Status</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="acc-tbody-student" class="divide-y divide-gray-100"></tbody>
-                            </table>
-                        </div>
-
-                        <!-- Registrar Table -->
-                        <div class="overflow-x-auto hidden" id="wrap-registrar">
-                            <table class="w-full text-sm">
-                                <thead>
-                                    <tr class="border-b border-gray-200 bg-gray-50">
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">ID</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Full Name</th>
-                                        <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5 hidden sm:table-cell">Email</th>
                                         <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Role</th>
                                         <th class="text-left text-xs font-black text-gray-400 uppercase tracking-widest px-5 py-3.5">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody id="acc-tbody-registrar" class="divide-y divide-gray-100"></tbody>
+                                <tbody id="acc-tbody" class="divide-y divide-gray-100"></tbody>
                             </table>
                         </div>
 
@@ -334,287 +308,65 @@
     </section>
 
     <!-- ============================================================ -->
-    <!-- SCRIPT: USER MANAGEMENT -->
+    <!-- MODAL: UPLOAD DOCUMENT -->
     <!-- ============================================================ -->
-    <script>
+    <div id="upload-doc-modal" class="fixed inset-0 z-[60] hidden overflow-y-auto">
+        <div class="flex min-h-screen items-center justify-center p-4">
+            <!-- Overlay -->
+            <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onclick="closeUploadModal()"></div>
 
-        // ── SAMPLE DATA ──
-        const sampleStudents = [
-            { id: 'USR-001', document_type: 'Transcript of Records',     full_name: 'Maria Aquino', initials: 'MA', av: 'bg-blue-100 text-blue-700',   requested_at: 'Apr 30, 2026 · 9:14 AM', payment_status: 'paid',   active: true },
-            { id: 'USR-002', document_type: 'Certificate of Enrollment', full_name: 'Jose Reyes',   initials: 'JR', av: 'bg-purple-100 text-purple-700', requested_at: 'May 1, 2026 · 2:45 PM',  payment_status: 'unpaid', active: false },
-        ];
+            <!-- Modal Content -->
+            <div class="relative w-full max-w-md scale-100 transform rounded-2xl bg-white p-6 shadow-2xl transition-all">
+                <div class="mb-6 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xl font-black text-slate-900 tracking-tight">Upload Document</h3>
+                        <p id="upload-student-info" class="text-xs font-bold text-slate-500 mt-0.5">Student: #0 - Name</p>
+                    </div>
+                    <button title="Close Modal" onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
 
-        const sampleRegistrars = [
-            { id: 'REG-001', full_name: 'Ana Santos', initials: 'AS', av: 'bg-teal-100 text-teal-700', email: 'ana.santos@ntc.edu.ph', role: 'REGISTRAR', active: true },
-        ];
+                <div class="space-y-4">
+                    <input type="hidden" id="upload-student-id">
+                    
+                    <div>
+                        <label for="upload-doc-type" class="mb-1 block text-sm font-bold text-slate-700">Document Type</label>
+                        <select id="upload-doc-type" class="w-full rounded-lg border border-slate-200 p-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 bg-white">
+                            <option value="">Select Document Type</option>
+                            <option value="TOR">Transcript of Records</option>
+                            <option value="DIPLOMA">Diploma</option>
+                            <option value="CERT_ENROLLMENT">Certificate of Enrollment</option>
+                            <option value="CERT_GRADUATION">Certificate of Graduation</option>
+                            <option value="HONORABLE_DISMISSAL">Honorable Dismissal</option>
+                        </select>
+                    </div>
 
-        // ── TAB SWITCHING ──
-        function switchTab(tab) {
-            // Hide all panels
-            ['register', 'acc-status'].forEach(t => {
-                document.getElementById('panel-' + t).classList.add('hidden');
+                    <div>
+                        <label for="upload-doc-content" class="mb-1 block text-sm font-bold text-slate-700">Document Content / URL</label>
+                        <textarea id="upload-doc-content" rows="4" placeholder="Enter document content or secure download link..."
+                            class="w-full rounded-lg border border-slate-200 p-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500 resize-none"></textarea>
+                    </div>
 
-                // Desktop sidebar buttons
-                const dBtn = document.getElementById('tab-btn-' + t);
-                if (dBtn) dBtn.className =
-                    'flex items-center gap-2.5 text-sm font-bold px-3 py-2.5 rounded-lg transition-all text-gray-500 hover:bg-gray-100 w-full text-left';
-
-                // Mobile tab buttons
-                const mBtn = document.getElementById('tab-btn-' + t + '-mobile');
-                if (mBtn) mBtn.className =
-                    'flex-1 flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 transition-all text-gray-500 border-b-2 border-transparent';
-            });
-
-            // Show active panel
-            document.getElementById('panel-' + tab).classList.remove('hidden');
-
-            // Activate desktop button
-            const dActive = document.getElementById('tab-btn-' + tab);
-            if (dActive) dActive.className =
-                'flex items-center gap-2.5 text-sm font-bold px-3 py-2.5 rounded-lg transition-all bg-blue-600 text-white w-full text-left';
-
-            // Activate mobile button
-            const mActive = document.getElementById('tab-btn-' + tab + '-mobile');
-            if (mActive) mActive.className =
-                'flex-1 flex items-center justify-center gap-2 text-sm font-bold px-4 py-3 transition-all text-blue-600 border-b-2 border-blue-600';
-
-            if (tab === 'acc-status') renderAccounts();
-        }
-
-        // ── REGISTER FORM ──
-        function showError(inputId, msgId) {
-            const el = document.getElementById(inputId);
-            el.classList.add('border-red-400', 'ring-2', 'ring-red-300');
-            el.classList.remove('border-gray-200');
-            document.getElementById(msgId).classList.remove('hidden');
-        }
-
-        function clearError(inputId) {
-            const el = document.getElementById(inputId);
-            el.classList.remove('border-red-400', 'ring-2', 'ring-red-300');
-            el.classList.add('border-gray-200');
-            const errEl = document.getElementById('err-' + inputId.replace('reg-', ''));
-            if (errEl) errEl.classList.add('hidden');
-        }
-
-        function submitRegister() {
-            const fn = document.getElementById('reg-firstname').value.trim();
-            const ln = document.getElementById('reg-lastname').value.trim();
-            const em = document.getElementById('reg-email').value.trim();
-            const pw = document.getElementById('reg-password').value;
-            const rl = document.getElementById('reg-role').value;
-
-            let valid = true;
-
-            if (!fn) { showError('reg-firstname', 'err-firstname'); valid = false; }
-            if (!ln) { showError('reg-lastname', 'err-lastname'); valid = false; }
-            if (!em || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) { showError('reg-email', 'err-email'); valid = false; }
-            if (!pw || pw.length < 6) { showError('reg-password', 'err-password'); valid = false; }
-            if (!rl) { showError('reg-role', 'err-role'); valid = false; }
-
-            if (!valid) return;
-
-            // TODO: await fetch('/api/admin/users', { method: 'POST', body: JSON.stringify({ fn, ln, em, pw, rl }) });
-            alert(`User ${fn} ${ln} registered as ${rl}!`);
-            cancelRegister();
-        }
-
-        function cancelRegister() {
-            ['reg-firstname','reg-lastname','reg-email','reg-password'].forEach(id => {
-                document.getElementById(id).value = '';
-                clearError(id);
-            });
-            document.getElementById('reg-role').value = '';
-            clearError('reg-role');
-        }
-
-        // ── RENDER ACCOUNTS ──
-        function renderAccounts() {
-            const search   = document.getElementById('acc-search').value.toLowerCase();
-            const role     = document.getElementById('acc-role-filter').value;
-            const emptyEl  = document.getElementById('acc-empty');
-            const wrapStu  = document.getElementById('wrap-student');
-            const wrapReg  = document.getElementById('wrap-registrar');
-            const tbodyStu = document.getElementById('acc-tbody-student');
-            const tbodyReg = document.getElementById('acc-tbody-registrar');
-
-            tbodyStu.innerHTML = '';
-            tbodyReg.innerHTML = '';
-            emptyEl.classList.add('hidden');
-
-            if (role === 'STUDENT') {
-                wrapStu.classList.remove('hidden');
-                wrapReg.classList.add('hidden');
-
-                const list = sampleStudents.filter(u =>
-                    u.full_name.toLowerCase().includes(search) ||
-                    u.document_type.toLowerCase().includes(search)
-                );
-
-                if (!list.length) { emptyEl.classList.remove('hidden'); return; }
-
-                list.forEach(u => {
-                    const isPaid = u.payment_status === 'paid';
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50 transition-colors';
-                    tr.innerHTML = `
-                        <td class="px-5 py-4 text-gray-400 font-bold text-xs whitespace-nowrap">#${u.id}</td>
-                        <td class="px-5 py-4 font-bold text-gray-700 truncate">${u.document_type}</td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-full ${u.av} flex items-center justify-center text-xs font-black flex-shrink-0">${u.initials}</div>
-                                <span class="font-bold text-gray-700 truncate">${u.full_name}</span>
-                            </div>
-                        </td>
-                        <td class="px-5 py-4 text-gray-500 hidden sm:table-cell whitespace-nowrap">${u.requested_at}</td>
-                        <td class="px-5 py-4">
-                            <span class="status-badge text-xs font-bold px-2.5 py-1 rounded-full ${isPaid ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-500'}">
-                                ${isPaid ? 'Paid' : 'Unpaid'}
-                            </span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <button data-id="${u.id}" data-type="student"
-                                onclick="toggleStatus(this)"
-                                class="action-btn text-xs font-bold text-white py-1.5 rounded-lg transition-all active:scale-95 ${u.active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
-                                ${u.active ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </td>
-                    `;
-                    tbodyStu.appendChild(tr);
-                });
-
-            } else {
-                wrapStu.classList.add('hidden');
-                wrapReg.classList.remove('hidden');
-
-                const list = sampleRegistrars.filter(u =>
-                    u.full_name.toLowerCase().includes(search) ||
-                    u.email.toLowerCase().includes(search)
-                );
-
-                if (!list.length) { emptyEl.classList.remove('hidden'); return; }
-
-                list.forEach(u => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-gray-50 transition-colors';
-                    tr.innerHTML = `
-                        <td class="px-5 py-4 text-gray-400 font-bold text-xs whitespace-nowrap">#${u.id}</td>
-                        <td class="px-5 py-4">
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-8 h-8 rounded-full ${u.av} flex items-center justify-center text-xs font-black flex-shrink-0">${u.initials}</div>
-                                <span class="font-bold text-gray-700 truncate">${u.full_name}</span>
-                            </div>
-                        </td>
-                        <td class="px-5 py-4 text-gray-500 hidden sm:table-cell truncate">${u.email}</td>
-                        <td class="px-5 py-4">
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">${u.role}</span>
-                        </td>
-                        <td class="px-5 py-4">
-                            <button data-id="${u.id}" data-type="registrar"
-                                onclick="toggleStatus(this)"
-                                class="action-btn text-xs font-bold text-white py-1.5 rounded-lg transition-all active:scale-95 ${u.active ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}">
-                                ${u.active ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </td>
-                    `;
-                    tbodyReg.appendChild(tr);
-                });
-            }
-        }
-
-        function filterAccounts() { renderAccounts(); }
-
-        // ── TOGGLE ACTIVATE / DEACTIVATE ──
-        function toggleStatus(btn) {
-            const id      = btn.dataset.id;
-            const type    = btn.dataset.type;
-            const isActive = btn.textContent.trim() === 'Deactivate';
-            const newState = !isActive;
-
-            const list = type === 'student' ? sampleStudents : sampleRegistrars;
-            const user = list.find(u => u.id === id);
-            if (user) user.active = newState;
-
-            // Update just the button — no re-render, no layout shift
-            btn.textContent = newState ? 'Deactivate' : 'Activate';
-            btn.className = `action-btn text-xs font-bold text-white py-1.5 rounded-lg transition-all active:scale-95 ${newState ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`;
-        }
-
-        function initUserManagement() { switchTab('register'); }
-
-    </script>
+                    <div class="flex gap-2 pt-2">
+                        <button type="button" onclick="submitUploadDocument()" id="upload-submit-btn"
+                            class="flex-1 rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed">
+                            Save Document
+                        </button>
+                        <button type="button" onclick="closeUploadModal()"
+                            class="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-50 active:scale-95">
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- ============================================================ -->
-    <!-- SCRIPT: NAV, AUTH, LOGOUT -->
+    <!-- SCRIPTS -->
     <!-- ============================================================ -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-
-            const firstNameEl       = document.getElementById("navbar-firstname");
-            const firstNameMobileEl = document.getElementById("navbar-firstname-mobile");
-            const logoutBtn         = document.getElementById("logout-btn");
-            const logoutBtnMobile   = document.getElementById("logout-btn-mobile");
-            const hamburgerBtn      = document.getElementById("hamburger-btn");
-            const mobileMenu        = document.getElementById("mobile-menu");
-            const sections          = ['dashboard', 'user-management'];
-
-            const getFirstName = () => {
-                const email = sessionStorage.getItem("email") ?? "";
-                return email.split("@")[0] || "Admin";
-            };
-
-            const logout = () => {
-                sessionStorage.clear(); localStorage.clear();
-                window.location.href = "index.html";
-            };
-
-            const navigateTo = (targetId) => {
-                sections.forEach(id => {
-                    const s = document.getElementById(id);
-                    if (s) s.classList.toggle('hidden', id !== targetId);
-                });
-
-                document.querySelectorAll('.nav-link').forEach(link => {
-                    const t = link.getAttribute('href').substring(1);
-                    link.className = t === targetId
-                        ? "nav-link text-sm font-bold text-blue-600 border-b-2 border-blue-600 pb-0.5"
-                        : "nav-link text-sm font-bold text-gray-500 hover:text-blue-600 transition-colors";
-                });
-
-                document.querySelectorAll('.nav-link-mobile').forEach(link => {
-                    const t = link.getAttribute('href').substring(1);
-                    link.className = t === targetId
-                        ? "nav-link-mobile text-sm font-bold text-blue-600 bg-blue-50 px-2 py-2 rounded-lg"
-                        : "nav-link-mobile text-sm font-bold text-gray-500 hover:text-blue-600 hover:bg-gray-50 px-2 py-2 rounded-lg transition-colors";
-                });
-
-                if (targetId === 'user-management') initUserManagement();
-            };
-
-            const firstName = getFirstName();
-            if (firstNameEl) firstNameEl.textContent = firstName;
-            if (firstNameMobileEl) firstNameMobileEl.textContent = firstName;
-
-            document.querySelectorAll('.nav-link').forEach(link => {
-                link.addEventListener('click', e => { e.preventDefault(); navigateTo(link.getAttribute('href').substring(1)); });
-            });
-
-            document.querySelectorAll('.nav-link-mobile').forEach(link => {
-                link.addEventListener('click', e => {
-                    e.preventDefault();
-                    navigateTo(link.getAttribute('href').substring(1));
-                    mobileMenu.classList.remove('open');
-                });
-            });
-
-            if (logoutBtn) logoutBtn.addEventListener("click", logout);
-            if (logoutBtnMobile) logoutBtnMobile.addEventListener("click", logout);
-            if (hamburgerBtn) hamburgerBtn.addEventListener("click", () => mobileMenu.classList.toggle("open"));
-
-            navigateTo('dashboard');
-            window.addEventListener("navigateTo", e => navigateTo(e.detail.section));
-        });
-    </script>
+    <script type="module" src="js/adminDashboard.js"></script>
 
 </body>
 </html>

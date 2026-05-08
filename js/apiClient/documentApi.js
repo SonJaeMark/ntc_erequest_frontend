@@ -32,7 +32,8 @@ function withAuth(token, options = {}) {
  * //     "documentType": "TOR",
  * //     "documentContent": "base64...",
  * //     "studentId": 5,
- * //     "studentFullName": "Charlie Brown"
+ * //     "studentFullName": "Charlie Brown",
+ * //     "amount": "120"
  * //   }
  * // ]
  */
@@ -69,6 +70,7 @@ export function getStudentDocuments(token) {
  * //   "studentId": 5,
  * //   "studentFullName": "Charlie Brown",
  * //   "registrarId": null
+ * //   "amount": "120"
  * // }
  */
 export function submitDocumentRequest(token, data) {
@@ -166,4 +168,25 @@ export function getPendingRequests(token) {
  */
 export function getRequestLogs(token, documentRequestId) {
   return apiRequest(`/api/document-request/logs/${documentRequestId}`, withAuth(token, { method: "GET" }));
+}
+
+/**
+ * Saves a new document for a student.
+ * @param {string} token - JWT access token.
+ * @param {Object} data - DocumentRequestDTO
+ * @param {string} data.documentType - (DocumentType enum) TOR,
+    CERTIFICATE_OF_ENROLLMENT,
+    GOOD_MORAL,
+    DIPLOMA,
+    HONORABLE_DISMISSAL,
+    CERTIFICATE_OF_REGISTRATION
+ * @param {string} data.documentContent - Content of the document
+ * @param {number} data.studentId - ID of the student
+ * @returns {Promise} - DocumentResponseDTO
+ */
+export function saveStudentDocument(token, data) {
+  return apiRequest("/api/document/save", withAuth(token, {
+    method: "POST",
+    body: JSON.stringify(data)
+  }));
 }

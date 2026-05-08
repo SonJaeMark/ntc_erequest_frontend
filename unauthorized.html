@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unauthorized Access | NTC eRequest</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Lato', 'ui-sans-serif', 'system-ui'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 min-h-screen flex items-center justify-center p-4 font-sans">
+    <div class="max-w-md w-full text-center">
+        <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-red-100 rounded-full mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+            </div>
+            <h1 class="text-3xl font-black text-slate-900 mb-2 tracking-tight">Account Inactive</h1>
+            <p class="text-slate-600">Your account is currently disabled or inactive. Please contact the administrator or registrar for assistance.</p>
+        </div>
+        
+        <div class="bg-white p-6 rounded-2xl shadow-xl border border-slate-100 mb-8">
+            <p class="text-sm text-slate-500 mb-4 text-left">Possible reasons:</p>
+            <ul class="text-sm text-slate-600 text-left space-y-2 mb-6">
+                <li class="flex items-start gap-2">
+                    <span class="text-red-500 font-bold">•</span>
+                    <span>Your registration is still pending approval.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-red-500 font-bold">•</span>
+                    <span>Your account has been temporarily suspended.</span>
+                </li>
+                <li class="flex items-start gap-2">
+                    <span class="text-red-500 font-bold">•</span>
+                    <span>Access to this portal has been restricted for your account.</span>
+                </li>
+            </ul>
+            
+            <a href="index.html" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition-colors shadow-md active:transform active:scale-[0.98]">
+                Back to Login
+            </a>
+        </div>
+        
+        <p class="text-xs text-slate-400">© 2026 National Teachers College. All rights reserved.</p>
+    </div>
+</body>
+</html>

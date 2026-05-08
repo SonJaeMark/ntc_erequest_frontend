@@ -250,27 +250,10 @@
                 </select>
             </div>
 
-            <div id="reference-number-group" class="mb-4 hidden">
-                <div class="mb-3 rounded-lg bg-blue-50 p-3 border border-blue-100">
-                    <p class="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-1">Generated Reference</p>
-                    <p id="generated-reference-display" class="text-lg font-black text-blue-900 tracking-wider">REF-XXXX-XXXX</p>
-                    <p class="text-[10px] text-blue-500 mt-1">Please copy this reference number and paste it below after paying in the gateway.</p>
-                </div>
-                <label for="reference-number" class="mb-1 block text-sm font-bold text-gray-700">Reference Number</label>
-                <input type="text" id="reference-number"
-                    placeholder="Paste reference number here"
-                    class="w-full rounded-lg border border-gray-300 p-2.5 text-sm outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
-            </div>
-
-            <div class="flex flex-col gap-2">
-                <button type="button" id="payment-confirm-btn" disabled
-                    class="w-full rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:bg-gray-300">
-                    Confirm Payment Method
-                </button>
-                <button type="button" id="submit-payment-btn" disabled class="hidden w-full rounded-lg bg-green-600 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-green-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none">
-                    Submit Payment
-                </button>
-            </div>
+            <button type="button" id="payment-confirm-btn" disabled
+                class="w-full rounded-lg bg-blue-600 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-blue-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-gray-300 disabled:shadow-none disabled:hover:bg-gray-300">
+                Confirm Payment Method
+            </button>
         </div>
     </div>
 

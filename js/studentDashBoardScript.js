@@ -10,7 +10,7 @@ import { processPayment, checkPayment } from "./apiClient/paymentApi.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
   // --- Auth guard: requires STUDENT role ---
-  requireRole(["STUDENT"]);
+  if (!requireRole(["STUDENT"])) return;
 
   // --- Element references ---
   const firstNameEl = document.getElementById("navbar-firstname");
@@ -26,23 +26,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   const paymentModalClose = document.getElementById("payment-modal-close");
   const paymentMethodSelect = document.getElementById("payment-method");
   const paymentConfirmBtn = document.getElementById("payment-confirm-btn");
-  const submitPaymentBtn = document.getElementById("submit-payment-btn");
-  const referenceNumberGroup = document.getElementById(
-    "reference-number-group"
-  );
-  const referenceNumberInput = document.getElementById("reference-number");
-  const generatedReferenceDisplay = document.getElementById(
-    "generated-reference-display"
-  );
-
-  if (referenceNumberInput) {
-    referenceNumberInput.addEventListener("input", () => {
-      if (!activePaymentRequest || !submitPaymentBtn) return;
-      const val = referenceNumberInput.value.trim();
-      // Enable submit button only if input matches the generated reference
-      submitPaymentBtn.disabled = val !== activePaymentRequest.referenceNumber;
-    });
-  }
 
   const sections = ["dashboard", "request-document", "my-requests"];
   let activePaymentRequest = null;
@@ -111,26 +94,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (paymentRequestId)
       paymentRequestId.textContent = `Request ID: ${request.id}`;
     if (paymentMethodSelect) paymentMethodSelect.value = "";
-    if (referenceNumberInput) {
-      referenceNumberInput.value = "";
-    }
-    if (generatedReferenceDisplay) {
-      generatedReferenceDisplay.textContent =
-        activePaymentRequest.referenceNumber;
-    }
-    if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
     if (paymentConfirmBtn) {
-       paymentConfirmBtn.disabled = true;
-       paymentConfirmBtn.classList.remove("hidden");
-       paymentConfirmBtn.textContent = "Confirm Payment Method";
-     }
-     if (submitPaymentBtn) {
-       submitPaymentBtn.classList.add("hidden");
-       submitPaymentBtn.disabled = true;
-       submitPaymentBtn.textContent = "Submit Payment";
-     }
- 
-     paymentModal.classList.remove("hidden");
+      paymentConfirmBtn.disabled = true;
+      paymentConfirmBtn.textContent = "Confirm Payment Method";
+    }
+
+    paymentModal.classList.remove("hidden");
     document.body.classList.add("overflow-hidden");
     paymentMethodSelect?.focus();
   };
@@ -142,16 +111,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.remove("overflow-hidden");
     activePaymentRequest = null;
     if (paymentMethodSelect) paymentMethodSelect.value = "";
-    if (referenceNumberInput) referenceNumberInput.value = "";
-    if (referenceNumberGroup) referenceNumberGroup.classList.add("hidden");
-    if (generatedReferenceDisplay) generatedReferenceDisplay.textContent = "";
     if (paymentConfirmBtn) {
       paymentConfirmBtn.disabled = true;
-      paymentConfirmBtn.classList.remove("hidden");
-    }
-    if (submitPaymentBtn) {
-      submitPaymentBtn.classList.add("hidden");
-      submitPaymentBtn.disabled = true;
     }
 
     if (lastPaymentTrigger) {
@@ -344,11 +305,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       const payload = {
         paymentMethod: activePaymentRequest.paymentMethod,
         documentRequestId: activePaymentRequest.id,
-        referenceNumber: referenceNumberInput?.value || null,
+        referenceNumber: activePaymentRequest.referenceNumber,
       };
 
       paymentConfirmBtn.disabled = true;
-      paymentConfirmBtn.textContent = "Gateway Opened";
+      paymentConfirmBtn.textContent = "Opening Gateway...";
 
       const popupOpened = openPaymentGatewayWindow(
         activePaymentRequest,
@@ -362,48 +323,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
-      // Show Submit button and Reference field if not already visible
-      if (submitPaymentBtn) submitPaymentBtn.classList.remove("hidden");
-      if (referenceNumberGroup) referenceNumberGroup.classList.remove("hidden");
-    });
-  }
-
-  if (submitPaymentBtn) {
-    submitPaymentBtn.addEventListener("click", async () => {
-      if (!activePaymentRequest || !referenceNumberInput?.value) {
-        alert("Please paste the reference number from the payment gateway.");
-        return;
-      }
-
-      const token = getAuthToken();
-      if (!token) {
-        alert("Session expired. Please log in again.");
-        window.location.href = "index.html";
-        return;
-      }
-
-      const payload = {
-        paymentMethod: activePaymentRequest.paymentMethod,
-        documentRequestId: activePaymentRequest.id,
-        referenceNumber: referenceNumberInput.value,
-      };
-
-      submitPaymentBtn.disabled = true;
-      submitPaymentBtn.textContent = "Processing...";
-
-      try {
-        await processPayment(token, payload);
-        alert("Payment submitted successfully! Waiting for validation.");
-        await loadDocumentRequests();
-        navigateTo("dashboard");
-        closePaymentModal();
-        paymentGatewayWindow?.close();
-      } catch (error) {
-        console.error("Payment error:", error);
-        alert("Failed to process payment: " + error.message);
-        submitPaymentBtn.disabled = false;
-        submitPaymentBtn.textContent = "Submit Payment";
-      }
+      closePaymentModal();
     });
   }
 
@@ -416,10 +336,28 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Instead of auto-submitting, we just clear the pending status
-    // and let the student manually paste the reference and click submit.
+    const paymentToProcess = pendingGatewayPayment;
     clearPendingGatewayPayment();
-    console.log("Payment gateway reported success. Waiting for manual submission.");
+
+    const token = getAuthToken();
+    if (!token) {
+      alert("Session expired. Please log in again.");
+      window.location.href = "index.html";
+      return;
+    }
+
+    try {
+      await processPayment(token, paymentToProcess.payload);
+      alert("Payment submitted successfully! Waiting for validation.");
+      await loadDocumentRequests();
+      navigateTo("dashboard");
+      paymentGatewayWindow?.close();
+    } catch (error) {
+      console.error("Payment error:", error);
+      alert("Failed to process payment: " + error.message);
+    } finally {
+      paymentGatewayWindow = null;
+    }
   });
 
   if (paymentMethodSelect) {
@@ -428,19 +366,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       const method = paymentMethodSelect.value;
       activePaymentRequest.paymentMethod = method;
-
-      // Show/hide reference number field
-      if (referenceNumberGroup) {
-        if (method && method !== "CASH") {
-          // In the new flow, we don't auto-show the reference field until the gateway is opened
-          // or we can show it but keep it empty.
-          // Let's keep it hidden until "Confirm" is clicked to guide the user.
-          referenceNumberGroup.classList.add("hidden");
-        } else {
-          referenceNumberGroup.classList.add("hidden");
-          if (referenceNumberInput) referenceNumberInput.value = "";
-        }
-      }
 
       if (paymentConfirmBtn) {
         paymentConfirmBtn.disabled = !method;
@@ -551,6 +476,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             documentMap[doc.documentType] = {
               id: doc.id,
               studentFullName: doc.studentFullName,
+              amount: doc.amount,
             };
           }
         });
@@ -567,6 +493,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Bug 4 fix: format enum to proper Title Case
           option.textContent = formatLabel(type);
           documentTypeSelect.appendChild(option);
+        });
+
+        // Add change listener to update button amount
+        const submitBtn = document.querySelector('button[type="submit"]');
+        documentTypeSelect.addEventListener("change", () => {
+          const selectedType = documentTypeSelect.value;
+          const docInfo = documentMap[selectedType];
+          if (docInfo && submitBtn) {
+            const amount = docInfo.amount || "0";
+            submitBtn.textContent = `Request Document — P${amount}`;
+          }
         });
 
         console.log(
@@ -634,8 +571,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       // --- Sort requests by latest date first ---
       if (Array.isArray(requests)) {
         requests.sort((a, b) => {
-          const dateA = new Date(a.requestedAt || 0);
-          const dateB = new Date(b.requestedAt || 0);
+          const dateA = new Date(a.requestedAt || a.requested_at || 0);
+          const dateB = new Date(b.requestedAt || b.requested_at || 0);
           return dateB - dateA;
         });
       }
@@ -681,7 +618,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
           const requestedDate = document.createElement("p");
           requestedDate.className = "text-sm text-gray-500";
-          requestedDate.textContent = formatDate(request.requestedAt);
+          const rawDate = request.requestedAt || request.requested_at;
+          requestedDate.textContent = formatDate(rawDate);
 
           titleGroup.append(title, requestedDate);
 
@@ -1003,6 +941,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Reset form and refresh requests list
         form.reset();
+        const submitBtnReset = document.querySelector('button[type="submit"]');
+        if (submitBtnReset) submitBtnReset.textContent = "Request Document";
         await loadDocumentRequests();
 
         // Re-enable submit button

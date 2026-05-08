@@ -30,10 +30,7 @@
                 </div>
                 <div id="reference-row" class="hidden items-center justify-between text-sm">
                     <span class="font-bold text-slate-500">Reference</span>
-                    <div class="flex items-center gap-2">
-                        <span id="reference-number" class="font-black text-blue-600">-</span>
-                        <button id="copy-btn" class="rounded bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-200">Copy</button>
-                    </div>
+                    <span id="reference-number" class="font-black text-blue-600">-</span>
                 </div>
             </div>
 
@@ -67,25 +64,9 @@
         if (referenceNumber) {
             const refRow = document.getElementById("reference-row");
             const refEl = document.getElementById("reference-number");
-            const copyBtn = document.getElementById("copy-btn");
-
             refRow.classList.remove("hidden");
             refRow.classList.add("flex");
             refEl.textContent = referenceNumber;
-
-            copyBtn.addEventListener("click", () => {
-                navigator.clipboard.writeText(referenceNumber).then(() => {
-                    const originalText = copyBtn.textContent;
-                    copyBtn.textContent = "Copied!";
-                    copyBtn.classList.replace("bg-blue-100", "bg-green-100");
-                    copyBtn.classList.replace("text-blue-700", "text-green-700");
-                    setTimeout(() => {
-                        copyBtn.textContent = originalText;
-                        copyBtn.classList.replace("bg-green-100", "bg-blue-100");
-                        copyBtn.classList.replace("text-green-700", "text-blue-700");
-                    }, 2000);
-                });
-            });
         }
 
         const progressBar = document.getElementById("progress-bar");
